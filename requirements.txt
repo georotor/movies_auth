@@ -1,7 +1,6 @@
 psycopg2-binary==2.9.5
 redis[hiredis]==4.5.1
 sqlalchemy==2.0.3
-pydantic==1.10.4
 flask==2.2.2
 flask-restx==1.0.6
 flask-sqlalchemy==3.0.3

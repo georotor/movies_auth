@@ -13,10 +13,7 @@ jwt = JWTManager()
 
 
 def configure(binder):
-    binder.bind(
-        UserService,
-        to=get_user_service()
-    )
+    binder.bind(UserService, to=get_user_service())
 
 
 def create_app(config_object):
