@@ -1,18 +1,43 @@
-from pydantic import BaseSettings
+from datetime import timedelta
+from os import environ
+
+# from pydantic import BaseSettings
+#
+#
+# class DataBases(BaseSettings):
+#     postgres_password: str = '123qwe'
+#     postgres_user: str = 'app'
+#     postgres_db: str = 'auth_database'
+#     postgres_host: str = 'localhost'
+#     postgres_port: int = 5432
+#
+#     redis_host: str = 'localhost'
+#     redis_port: int = 6379
+#
+#     class Config:
+#         env_nested_delimiter = '__'
+#
+#
+# # config = Config()
 
 
-class Config(BaseSettings):
-    postgres_password: str = '123qwe'
-    postgres_user: str = 'app'
-    postgres_db: str = 'auth_database'
-    postgres_host: str = 'localhost'
-    postgres_port: int = 5432
+class Config:
+    SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(
+        environ.get('POSTGRES_USER', 'app'),
+        environ.get('POSTGRES_PASSWORD', '123qwe'),
+        environ.get('POSTGRES_HOST', 'localhost'),
+        int(environ.get('POSTGRES_PORT', 5432)),
+        environ.get('POSTGRES_DB', 'auth_database')
+    )
 
-    redis_host: str = 'localhost'
-    redis_port: int = 6379
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+    }
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    class Config:
-        env_nested_delimiter = '__'
+    JWT_SECRET_KEY = environ.get('JWT_SECRET_KEY', 'super secret')
+    JWT_TOKEN_LOCATION = 'headers'
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(weeks=4)
 
-
-config = Config()
+    RESTX_MASK_SWAGGER = False
