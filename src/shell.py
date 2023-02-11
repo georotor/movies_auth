@@ -21,4 +21,4 @@ def create(email, password, admin):
     user.is_admin = admin
 
     db.session.commit()
-    click.secho(f'Пользователь <{email}> создан/обновлен', fg='green')
+    click.secho(f'Пользователь <{email}> создан/обновлен')
