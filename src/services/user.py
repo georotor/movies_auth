@@ -5,6 +5,9 @@ from services.token import TokenService
 
 
 class UserService:
+    def __init__(self):
+        self.id = None
+
     def create(self, email: str, password: str):
         """
         Создаем нового пользователя.
@@ -19,6 +22,7 @@ class UserService:
         new_user = User(email=email, password=password)
         db.session.add(new_user)
         db.session.commit()
+        self.id = new_user.id
 
         return TokenService.create(user=new_user)
 
