@@ -9,7 +9,6 @@ from services.user import UserService, get_user_service
 
 
 migrate = Migrate()
-jwt = JWTManager()
 
 
 def configure(binder):
@@ -22,7 +21,7 @@ def create_app(config_object):
 
     db.init_app(app)
     migrate.init_app(app, db)
-    jwt.init_app(app)
+    jwt = JWTManager(app)
 
     return app
 
