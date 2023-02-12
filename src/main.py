@@ -30,6 +30,10 @@ def create_app(config_object):
 def register_blueprints(app):
     from api.v1 import api_v1
     app.register_blueprint(api_v1, url_prefix='/api/v1')
+
+    from shell import shell
+    app.register_blueprint(shell, cli_group=None)
+
     FlaskInjector(app=app, modules=[configure])
 
 
