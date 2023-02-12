@@ -26,6 +26,22 @@ class UserService:
 
         return TokenService.create(user=new_user)
 
+    def login(self, username, password):
+        user = User.query.filter_by(email=username).first()
+        if not user:
+            return
+        password_hash = password
+        if password_hash != user.password:
+            return
+        self.id = user.id
+        return True
+
+    def log(self, user_host, user_agent):
+        """Записываем дату, ip и браузер. """
+        pass
+
+
+
 
 @lru_cache()
 def get_user_service() -> UserService:
