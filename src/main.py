@@ -5,7 +5,9 @@ from flask_migrate import Migrate
 
 from db import db
 from config import Config
+from models.role import Role
 from services.user import UserService, get_user_service
+from services.role import RoleService, get_role_service
 
 
 migrate = Migrate()
@@ -14,6 +16,7 @@ jwt = JWTManager()
 
 def configure(binder):
     binder.bind(UserService, to=get_user_service())
+    binder.bind(RoleService, to=get_role_service(db, Role))
 
 
 def create_app(config_object):
