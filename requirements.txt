@@ -10,3 +10,4 @@ Flask-Injector==0.14.0
 Flask-JWT-Extended==4.4.4
 flask-migrate==4.0.4
 flask-marshmallow==0.14.0
+marshmallow-sqlalchemy==0.28.1
