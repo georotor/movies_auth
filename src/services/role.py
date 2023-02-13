@@ -3,14 +3,14 @@ from typing import Type
 
 from flask_sqlalchemy import SQLAlchemy
 
-from models.role import Role
-from services.token import TokenService
+from models.role import Role, RoleSchema
 
 
 class RoleService:
-    def __init__(self, db: SQLAlchemy, model_role: Type[Role]):
+    def __init__(self, db: SQLAlchemy, model_role: Type[Role], model_role_schema: Type[RoleSchema]):
         self.db = db
         self.model_role = model_role
+        self.model_role_schema = model_role_schema
 
     def find_by_name(self, name):
         return self.model_role.query.filter_by(name=name).one_or_none()
@@ -24,12 +24,13 @@ class RoleService:
         self.db.session.add(role)
         self.db.session.commit()
 
-        return role
+        return self.model_role_schema().dump(role)
 
 
 @lru_cache()
 def get_role_service(
         db: SQLAlchemy,
-        model_role: Type[Role]
+        model_role: Type[Role],
+        model_role_schema: Type[RoleSchema]
 ) -> RoleService:
-    return RoleService(db, model_role)
+    return RoleService(db, model_role, model_role_schema)

@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.dialects.postgresql import UUID
 
-from db import db
+from db import db, ma
 from utils import utc
 
 
@@ -17,3 +17,8 @@ class Role(db.Model):
 
     def __repr__(self):
         return f'<Roles {self.name}>'
+
+
+class RoleSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'name', 'description')

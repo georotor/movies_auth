@@ -3,9 +3,9 @@ from flask_injector import FlaskInjector
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 
-from db import db
+from db import db, ma
 from config import Config
-from models.role import Role
+from models.role import Role, RoleSchema
 from services.user import UserService, get_user_service
 from services.role import RoleService, get_role_service
 
@@ -16,7 +16,7 @@ jwt = JWTManager()
 
 def configure(binder):
     binder.bind(UserService, to=get_user_service())
-    binder.bind(RoleService, to=get_role_service(db, Role))
+    binder.bind(RoleService, to=get_role_service(db, Role, RoleSchema))
 
 
 def create_app(config_object):
@@ -24,7 +24,10 @@ def create_app(config_object):
     app.config.from_object(config_object)
 
     db.init_app(app)
+    ma.init_app(app)
+
     migrate.init_app(app, db)
+
     jwt.init_app(app)
 
     return app

@@ -10,7 +10,7 @@ roles.models[role.name] = role
 roles.models[role_create.name] = role_create
 
 
-@roles.route('/')
+@roles.route('')
 class RoleCreate(Resource):
     @inject
     def __init__(self, role_service: RoleService, **kwargs):
