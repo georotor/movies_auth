@@ -12,12 +12,16 @@ class RoleService:
         self.model_role = model_role
         self.model_role_schema = model_role_schema
 
-    def find_by_name(self, name):
+    def get_by_name(self, name: str) -> Role | None:
         return self.model_role.query.filter_by(name=name).one_or_none()
 
-    def create(self, name: str, description: str):
+    def get_all(self):
+        roles = self.model_role.query.all()
+        return self.model_role_schema(many=True).dump(roles)
 
-        if self.find_by_name(name):
+    def create(self, name: str, description: str) -> RoleSchema | None:
+
+        if self.get_by_name(name):
             return None
 
         role = self.model_role(name=name, description=description)

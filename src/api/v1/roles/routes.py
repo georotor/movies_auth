@@ -17,6 +17,11 @@ class RoleCreate(Resource):
         self.role_service = role_service
         super().__init__(**kwargs)
 
+    @roles.marshal_list_with(role, code=int(HTTPStatus.OK))
+    @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутрення ошибка сервера.')
+    def get(self):
+        return self.role_service.get_all()
+
     @roles.expect(role_create, validate=True)
     @roles.marshal_with(role, code=int(HTTPStatus.CREATED))
     @roles.response(int(HTTPStatus.BAD_REQUEST), 'Ошибка проверки входных данных.')
