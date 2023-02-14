@@ -2,7 +2,7 @@ import asyncio
 import pytest
 
 
-pytest_plugins = ("utils.fixtures.http")
+pytest_plugins = ("tests.functional.utils.fixtures.http")
 
 
 @pytest.fixture(scope='session')
