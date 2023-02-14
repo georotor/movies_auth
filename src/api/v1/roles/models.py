@@ -1,4 +1,4 @@
-from flask_restx import Model, fields
+from flask_restx import Model, SchemaModel, fields
 
 role = Model(
     'Role',
@@ -14,5 +14,17 @@ role_create = Model(
     {
         'name': fields.String(required=True),
         'description': fields.String()
+    }
+)
+
+role_patch = SchemaModel(
+    'RolePatch',
+    {
+        'type': 'object',
+        'properties': {
+            'name': {'type': 'string'},
+            'description': {'type': 'string'},
+        },
+        'anyOf': [{'required': ['name']}, {'required': ['description']}]
     }
 )
