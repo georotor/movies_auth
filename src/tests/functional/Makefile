@@ -1,4 +1,13 @@
-restart:
-	docker-compose down -v && docker-compose up -dV --build
-test:
-	docker-compose restart tests && docker-compose logs -f tests
+down:
+	docker-compose -f docker-compose.tests.yml down -v
+
+up:
+	docker-compose -f docker-compose.tests.yml up -dV --build
+
+ps:
+	docker-compose -f docker-compose.tests.yml ps
+
+restart: down up
+
+# test:
+# 	@restart tests && docker-compose logs -f tests

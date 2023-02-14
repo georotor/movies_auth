@@ -1,0 +1,47 @@
+version: '3'
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    env_file:
+      - ./.env.tests
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "auth_database_tests"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  redis:
+    image: redis:7.0.7
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+
+  api:
+    build: ../../../.
+    image: api-image
+    env_file:
+      - .env.tests
+    ports:
+      - 5000:5000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  tests:
+    image: api-image
+    env_file:
+      - .env.tests
+    entrypoint: >
+      sh -c "pip3 install -r tests/functional/requirements.txt
+      && python3 -m pytest tests/functional/src"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
