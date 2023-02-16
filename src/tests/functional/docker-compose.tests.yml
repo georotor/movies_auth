@@ -38,8 +38,9 @@ services:
     env_file:
       - .env.tests
     entrypoint: >
-      sh -c "pip3 install -r tests/functional/requirements.txt \
-      && python3 -m pytest tests/functional/src"
+      sh -c "/usr/local/bin/pip3 install -U pip \
+      && /usr/local/bin/pip3 install -r /opt/app/tests/functional/requirements.txt \
+      && /usr/local/bin/python3 -m pytest /opt/app/tests/functional/src"
     depends_on:
       - api
 

@@ -26,4 +26,4 @@ RUN groupadd -r api && useradd -d /opt/app -r -g api api \
 
 USER api
 
-ENTRYPOINT ["sh", "entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "entrypoint.sh"]
