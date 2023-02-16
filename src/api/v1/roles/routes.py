@@ -24,9 +24,13 @@ class RolesUpdate(Resource):
     @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера.')
     def delete(self, role_id):
         res = self.role_service.delete(role_id)
-        if res is None:
-            abort(HTTPStatus.NOT_FOUND, 'Роль не существует.')
-        return
+        match res:
+            case None:
+                abort(HTTPStatus.NOT_FOUND, 'Роль не существует.')
+            case True:
+                return
+            case _:
+                abort(HTTPStatus.INTERNAL_SERVER_ERROR, 'Внутренняя ошибка сервера.')
 
     @roles.expect(role_patch, validate=True)
     @roles.response(int(HTTPStatus.OK), 'Роль обновлена.')
