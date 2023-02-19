@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from flask_jwt_extended import (create_access_token, create_refresh_token,
@@ -61,3 +62,7 @@ class TokenService:
         """
         identity = get_jwt_identity()
         return TokenService.create(identity, fresh=False)
+
+    @staticmethod
+    def expired_at():
+        return datetime.now(timezone.utc) + config.JWT_ACCESS_TOKEN_EXPIRES

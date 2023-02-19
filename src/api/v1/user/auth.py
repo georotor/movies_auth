@@ -34,8 +34,9 @@ def create_new_user():
 
     access_token, refresh_token = token_service.create(user_id, fresh=True)
 
+    expire = token_service.expired_at()
     return jsonify(
-        access_token=access_token, refresh_token=refresh_token
+        access_token=access_token, refresh_token=refresh_token, expire=expire,
     ), HTTPStatus.CREATED
 
 
@@ -49,9 +50,9 @@ def login():
     auth_service.remember_login(user_id, user_agent)
 
     access_token, refresh_token = token_service.create(user_id)
-
+    expire = token_service.expired_at()
     return jsonify(
-        access_token=access_token, refresh_token=refresh_token
+        access_token=access_token, refresh_token=refresh_token, expire=expire,
     ), HTTPStatus.OK
 
 
@@ -80,9 +81,10 @@ def refresh():
 
     """
     access_token, refresh_token = token_service.refresh()
+    expire = token_service.expired_at()
 
     return jsonify(
-        access_token=access_token, refresh_token=refresh_token
+        access_token=access_token, refresh_token=refresh_token, expire=expire,
     ), HTTPStatus.OK
 
 
