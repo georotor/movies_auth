@@ -41,3 +41,6 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(weeks=4)
 
     RESTX_MASK_SWAGGER = False
+
+    REDIS_HOST = environ.get('REDIS_HOST', 'redis://default:redispw@localhost')
+    REDIS_PORT = environ.get('REDIS_PORT', '49153')
