@@ -20,9 +20,7 @@ def check_if_token_is_revoked(jwt_header, jwt_payload: dict):
     https://flask-jwt-extended.readthedocs.io/en/stable/blocklist_and_token_revoking/#redis
 
     """
-    user_agent = request.headers['user_agent']
-    jti = jwt_payload["jti"]
-    key = ':'.join((jti, user_agent))
+    key = jwt_payload["jti"]
     token_in_redis = rd.get(key)
     return token_in_redis is not None
 

@@ -32,9 +32,7 @@ def create_new_user():
     user_agent = request.user_agent.string
     auth_service.remember_login(user_id, user_agent, action='registration')
 
-    access_token, refresh_token = token_service.create(
-        user_id, user_agent, fresh=True
-    )
+    access_token, refresh_token = token_service.create(user_id, fresh=True)
 
     return jsonify(
         access_token=access_token, refresh_token=refresh_token
@@ -50,7 +48,7 @@ def login():
     user_agent = request.user_agent.string
     auth_service.remember_login(user_id, user_agent)
 
-    access_token, refresh_token = token_service.create(user_id, user_agent)
+    access_token, refresh_token = token_service.create(user_id)
 
     return jsonify(
         access_token=access_token, refresh_token=refresh_token
@@ -71,8 +69,7 @@ def logout():
     refresh токен пользователь сможет запросить новый.
 
     """
-    user_agent = request.headers['user_agent']
-    ex_token_type = token_service.delete(user_agent)
+    ex_token_type = token_service.delete()
     return jsonify(msg="{} token successfully revoked".format(ex_token_type))
 
 
@@ -80,17 +77,9 @@ def logout():
 @jwt_required(refresh=True)
 def refresh():
     """Получение новой пары токенов на основании действующего refresh токена.
-    Перед этим убеждаемся, что refresh токен и user_agent не менялись.
 
     """
-    user_agent = request.headers['user_agent']
-
-    if not token_service.check_owner(user_agent):
-        return jsonify(
-            msg='Token does not belong to this user'
-        ), HTTPStatus.CONFLICT
-
-    access_token, refresh_token = token_service.refresh(user_agent)
+    access_token, refresh_token = token_service.refresh()
 
     return jsonify(
         access_token=access_token, refresh_token=refresh_token
