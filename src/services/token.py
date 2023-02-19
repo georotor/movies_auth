@@ -38,9 +38,6 @@ class TokenService:
             fresh=fresh,
         )
 
-        key = get_jti(refresh_token)
-        rd.set(key, str(user_id), ex=config.JWT_REFRESH_TOKEN_EXPIRES)
-
         return access_token, refresh_token
 
     @staticmethod
