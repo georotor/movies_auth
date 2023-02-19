@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask
 from flask_injector import FlaskInjector
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
@@ -61,7 +61,7 @@ def register_blueprints(app):
     from api.v1 import api_v1
     app.register_blueprint(api_v1, url_prefix='/api/v1')
 
-    from auth import auth
+    from api.v1.user.auth import auth
     app.register_blueprint(auth, url_prefix='/api/v1/user')
 
     from shell import shell
