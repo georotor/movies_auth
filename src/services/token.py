@@ -30,8 +30,12 @@ class TokenService:
           fresh: "свежесть" токена.
 
         """
-        access_token = create_access_token(identity=user_id, fresh=True)
         refresh_token = create_refresh_token(identity=user_id)
+        access_token = create_access_token(
+            identity=user_id,
+            additional_claims={'refresh_jti': get_jti(refresh_token)},
+            fresh=fresh,
+        )
 
         key = get_jti(refresh_token)
         rd.set(key, str(user_id), ex=config.JWT_REFRESH_TOKEN_EXPIRES)
@@ -39,17 +43,14 @@ class TokenService:
         return access_token, refresh_token
 
     @staticmethod
-    def delete() -> str:
-        """Отзываем токен. Вносим его в черный список, время жизни записи равно
-        времени жизни самого токена.
-
-        Returns:
-            Тип удаленного токена.
+    def delete():
+        """Отзываем access токен и связанный с ним refresh токен. Вносим их в
+        черный список, где время жизни записи равно времени жизни токена.
 
         """
         token = get_jwt()
         rd.set(token["jti"], "", ex=config.JWT_ACCESS_TOKEN_EXPIRES)
-        return token["type"]
+        rd.set(token["refresh_jti"], "", ex=config.JWT_REFRESH_TOKEN_EXPIRES)
 
     @staticmethod
     def refresh():

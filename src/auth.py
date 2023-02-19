@@ -56,7 +56,7 @@ def login():
 
 
 @auth.route("/logout", methods=["DELETE"])
-@jwt_required(verify_type=False)
+@jwt_required()
 def logout():
     """Есть несколько разных способов отзывать токены при выходе пользователя.
     В документации https://flask-jwt-extended.readthedocs.io/en/stable/blocklist_and_token_revoking/#redis
@@ -65,12 +65,12 @@ def logout():
     предоставить один универсальный метод @jwt_required(verify_type=False), с
     помощью которого можно отозвать любой токен.
 
-    Важный момент! Отзывать только access токен бессмысленно - пока "жив"
-    refresh токен пользователь сможет запросить новый.
+    В нашей реализации мы оставляем всю логику в backend. Это гарантирует, что
+    будут отозваны оба токена разом.
 
     """
-    ex_token_type = token_service.delete()
-    return jsonify(msg="{} token successfully revoked".format(ex_token_type))
+    token_service.delete()
+    return jsonify(msg="Tokens successfully revoked")
 
 
 @auth.route("/refresh", methods=["POST"])
