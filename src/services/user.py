@@ -5,6 +5,9 @@ from services.token import TokenService
 
 
 class UserService:
+    def __init__(self):
+        self.id = None
+
     def create(self, email: str, password: str):
         """
         Создаем нового пользователя.
@@ -19,8 +22,25 @@ class UserService:
         new_user = User(email=email, password=password)
         db.session.add(new_user)
         db.session.commit()
+        self.id = new_user.id
 
         return TokenService.create(user=new_user)
+
+    def login(self, username, password):
+        user = User.query.filter_by(email=username).first()
+        if not user:
+            return
+        password_hash = password
+        if password_hash != user.password:
+            return
+        self.id = user.id
+        return True
+
+    def log(self, user_host, user_agent):
+        """Записываем дату, ip и браузер. """
+        pass
+
+
 
 
 @lru_cache()
