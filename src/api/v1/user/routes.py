@@ -1,9 +1,27 @@
+"""Ручки для работы с пользователем и его токенами.
+Регистрация, аутентификация, выход, перевыпуск токенов.
+
+Используются следующие декораторы restx:
+
+Валидация входных данных: @user.expect
+Валидация выходных данных: @user.marshal_with
+Варианты ответа для swagger: @user.response
+
+"""
+
 from http import HTTPStatus
-from flask_injector import inject
+
+from flask import request
+from flask_jwt_extended import jwt_required
 from flask_restx import Namespace, Resource, abort
 
-from .models import user_create, token, tokens
-from services.user import UserService
+from services.auth import AuthError, AuthService
+from services.token import TokenService
+
+from .models import token, tokens, user_create
+
+auth_service = AuthService()
+token_service = TokenService()
 
 user = Namespace('user', description='Авторизация пользователей')
 user.models[user_create.name] = user_create
@@ -13,26 +31,130 @@ user.models[tokens.name] = tokens
 
 @user.route('/signup')
 class SignUp(Resource):
-    @inject
-    def __init__(self, user_service: UserService, **kwargs):
-        self.user_service = user_service
-        super().__init__(**kwargs)
-
-    # Валидируем входные данные
     @user.expect(user_create, validate=True)
-    # Валидируем выходные данные
     @user.marshal_with(tokens, code=int(HTTPStatus.CREATED))
-    # Добавляем в сваггер варианты ответа
-    @user.response(int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.')
+    @user.response(
+        int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.'
+    )
     @user.response(int(HTTPStatus.CONFLICT), 'Email is already registered.')
-    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
+    @user.response(
+        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
+    )
     def post(self):
-        tokens_new = self.user_service.create(
-            email=user.payload['email'],
-            password=user.payload['password']
-        )
-        if tokens_new is None:
-            abort(HTTPStatus.CONFLICT, 'Email is already registered.')
+        """Регистрация пользователя в дополнительной валидацией данных. После
+        регистрации пользователь сразу считается аутентифицированным.
 
-        return tokens_new, HTTPStatus.CREATED
+        """
+        try:
+            user_id = auth_service.registration(request.json)
+        except AuthError:
+            abort(HTTPStatus.CONFLICT, 'Email is already registered.')
+            return
+
+        user_agent = request.user_agent.string
+        auth_service.remember_login(user_id, user_agent, action='registration')
+
+        access_token, refresh_token = token_service.create(user_id, fresh=True)
+
+        tokens_ = {
+            'access': {
+                'token': access_token,
+                'expired': token_service.expired_at(access_token)
+            },
+            'refresh': {
+                'token': refresh_token,
+                'expired': token_service.expired_at(refresh_token)
+            },
+        }
+
+        return tokens_
+
+
+@user.route('/login')
+class LogIn(Resource):
+    @user.expect(user_create, validate=True)
+    @user.marshal_with(tokens, code=int(HTTPStatus.CREATED))
+    @user.response(
+        int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.'
+    )
+    @user.response(
+        int(HTTPStatus.UNAUTHORIZED), 'Invalid username or password.'
+    )
+    @user.response(
+        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
+    )
+    def post(self):
+        """Аутентификация пользователя в дополнительной валидацией данных.
+
+        """
+        try:
+            user_id = auth_service.login(request.json)
+        except AuthError:
+            abort(HTTPStatus.UNAUTHORIZED, 'Invalid username or password.')
+            return
+
+        user_agent = request.user_agent.string
+        auth_service.remember_login(user_id, user_agent)
+
+        access_token, refresh_token = token_service.create(user_id, fresh=True)
+
+        tokens_ = {
+            'access': {
+                'token': access_token,
+                'expired': token_service.expired_at(access_token)
+            },
+            'refresh': {
+                'token': refresh_token,
+                'expired': token_service.expired_at(refresh_token)
+            },
+        }
+
+        return tokens_
+
+
+@user.route('/logout')
+class LogOut(Resource):
+    @user.response(
+        int(HTTPStatus.OK), 'Tokens successfully revoked.'
+    )
+    @user.response(
+        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
+    )
+    @jwt_required()
+    def delete(self):
+        """Отзываем access токен и связанный с ним refresh токен. Это
+        гарантирует, что пользователь не сможет их перевыпустить без повторной
+        аутентификации.
+
+        """
+        token_service.delete()
+        return HTTPStatus.OK, 'Tokens successfully revoked.'
+
+
+@user.route('/refresh')
+class Refresh(Resource):
+    @user.marshal_with(tokens, code=int(HTTPStatus.CREATED))
+    @user.response(
+        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
+    )
+    @jwt_required(refresh=True)
+    def post(self):
+        """Получение новой пары токенов на основании действующего refresh
+        токена.
+
+        """
+        access_token, refresh_token = token_service.refresh()
+
+        tokens_ = {
+            'access': {
+                'token': access_token,
+                'expired': token_service.expired_at(access_token)
+            },
+            'refresh': {
+                'token': refresh_token,
+                'expired': token_service.expired_at(refresh_token)
+            },
+        }
+
+        return tokens_
 

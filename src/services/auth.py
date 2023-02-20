@@ -1,10 +1,3 @@
-"""Сервисы авторизации:
-        - исключение AuthError;
-        - класс AuthService (регистрация, аутентификация, запись логов);
-        - декоратор admin_required для ограничения доступа к endpoint.
-
-"""
-
 from functools import wraps
 from http import HTTPStatus
 from typing import Optional
@@ -12,7 +5,6 @@ from uuid import UUID
 
 from flask import Blueprint, jsonify
 from flask_jwt_extended import JWTManager, get_jwt, verify_jwt_in_request
-from marshmallow.exceptions import ValidationError
 from sqlalchemy import insert, select
 from sqlalchemy.exc import NoResultFound
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -24,6 +16,24 @@ from schemas.user import UserHistorySchema
 
 auth = Blueprint("auth", __name__)
 jwt = JWTManager()
+
+
+def admin_required():
+    """Декоратор, проверяющий наличие записи о правах администратора в claims.
+
+    https://flask-jwt-extended.readthedocs.io/en/stable/custom_decorators/
+
+    """
+    def wrapper(func):
+        @wraps(func)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            if not claims["is_admin"]:
+                return jsonify(msg="Access denied"), HTTPStatus.FORBIDDEN
+            return func(*args, **kwargs)
+        return decorator
+    return wrapper
 
 
 class AuthError(Exception):
@@ -48,8 +58,8 @@ class AuthService:
 
     @staticmethod
     def login(data: dict):
-        """Аутентификация пользователя. Валидация данных (на данный момент -
-        минимальная) отдана схеме LoginSchema.
+        """Аутентификация пользователя. Валидация данных перенесена в restx и
+        убрана из схемы.
 
         """
         auth_data = LoginSchema().load(data)
@@ -65,14 +75,13 @@ class AuthService:
     @staticmethod
     def registration(data: dict):
         """Регистрация пользователя. Валидация данных (включая требования к
-        сложности пароля) отдана схеме RegistrationSchema. Если пользователь с
-        таким email уже существует - поднимаем исключение AuthError.
+        сложности пароля) перенесена в restx и убрана из схемы.
+
+        Если пользователь с таким email уже существует - поднимаем исключение
+        AuthError.
 
         """
-        try:
-            new_user = RegistrationSchema().load(data)
-        except ValidationError as e:
-            raise AuthError(str(e))
+        new_user = RegistrationSchema().load(data)
 
         if AuthService.find_user(new_user.email) is not None:
             raise AuthError("Email already in use")
@@ -90,8 +99,8 @@ class AuthService:
 
     @staticmethod
     def remember_login(user_id: UUID, user_agent: str, action: str = 'login'):
-        """Запись о логине пользователя. Валидация данных (на данный момент -
-        минимальная) отдана схеме UserHistorySchema.
+        """Запись о логине пользователя. Валидация данных перенесена в restx и
+        убрана из схемы.
 
         Args:
           user_id: id пользователя из БД;
@@ -112,21 +121,3 @@ class AuthService:
                 action=new_log.action,
             )
         )
-
-
-def admin_required():
-    """Декоратор, проверяющий наличие записи о правах администратора в claims.
-
-    https://flask-jwt-extended.readthedocs.io/en/stable/custom_decorators/
-
-    """
-    def wrapper(func):
-        @wraps(func)
-        def decorator(*args, **kwargs):
-            verify_jwt_in_request()
-            claims = get_jwt()
-            if not claims["is_admin"]:
-                return jsonify(msg="Access denied"), HTTPStatus.FORBIDDEN
-            return func(*args, **kwargs)
-        return decorator
-    return wrapper
