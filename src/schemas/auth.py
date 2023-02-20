@@ -19,22 +19,19 @@ class LoginSchema(Schema):
 
 
 class RegistrationSchema(Schema):
-    """Схема для регистрации пользователя с дополнительной валидацией полей.
-    Возвращает модель пользователя.
+    """Схема для регистрации пользователя. Возвращает модель пользователя.
 
-    """
-    email = fields.String(required=True)
-    password = fields.String(required=True)
-
-    @validates("email")
-    def validates_email(self, value):
-        if not re.match(r"^\S+@\S+\.\S+$", value):
-            raise ValidationError("Please, enter valid email address")
+    Валидация полей отдана restx, данные проверяются на уровне api.
+    При необходимости ее можно реализовать в схеме вот так:
 
     @validates("password")
     def validates_password(self, value):
         if len(value) < 8:
             raise ValidationError("Password must be at least 8 characters")
+
+    """
+    email = fields.String(required=True)
+    password = fields.String(required=True)
 
     @post_load
     def create_user(self, data, **kwargs):
