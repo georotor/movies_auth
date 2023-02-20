@@ -61,9 +61,6 @@ def register_blueprints(app):
     from api.v1 import api_v1
     app.register_blueprint(api_v1, url_prefix='/api/v1')
 
-    from api.v1.user.auth import auth
-    app.register_blueprint(auth, url_prefix='/api/v1/user')
-
     from shell import shell
     app.register_blueprint(shell, cli_group=None)
 
