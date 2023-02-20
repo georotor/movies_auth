@@ -1,14 +1,19 @@
 from http import HTTPStatus
+
 from flask_injector import inject
 from flask_restx import Namespace, Resource, abort
+from flask_jwt_extended import get_jwt, jwt_required
 
-from .models import role, role_create, role_patch
+from .models import role, role_create, role_patch, role_assign, admin_required_model
 from services.role import RoleService
+
 
 roles = Namespace('roles', description='Управление ролями')
 roles.models[role.name] = role
 roles.models[role_create.name] = role_create
 roles.models[role_patch.name] = role_patch
+roles.models[role_assign.name] = role_assign
+roles.models[admin_required_model.name] = admin_required_model
 
 
 @roles.route('/<uuid:role_id>')
@@ -74,5 +79,31 @@ class Roles(Resource):
 
         return new_role, HTTPStatus.CREATED
 
+
+from services.auth import admin_required
+
+
+from flask import Response
+@roles.route('/assign')
+class RolesAssign(Resource):
+    @inject
+    def __init__(self, role_service: RoleService, **kwargs):
+        self.role_service = role_service
+        super().__init__(**kwargs)
+
+    @roles.expect(role_assign, validate=True)
+    @roles.response(int(HTTPStatus.OK), 'Роль назначена.')
+    @roles.response(int(HTTPStatus.BAD_REQUEST), 'Ошибка проверки входных данных.')
+    @roles.response(int(HTTPStatus.NOT_FOUND), 'Роль или пользователь не существует.')
+    @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера.')
+    @roles.marshal_with(admin_required_model, code=HTTPStatus.FORBIDDEN)
+    # @roles.response(Response, int(HTTPStatus.FORBIDDEN), 'Внутренняя ошибка сервера.')
+    @admin_required()
+    def post(self):
+        result = self.role_service.assign(**roles.payload)
+        if result is None:
+            abort(HTTPStatus.NOT_FOUND, 'Роль или пользователь не существует.')
+
+        return
 
 

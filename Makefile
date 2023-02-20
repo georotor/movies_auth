@@ -1,7 +1,18 @@
-dev_up:
-	docker-compose -f docker-compose.dev.yml up -dV
+COMPOSE := docker-compose.dev.yml
 
-dev_down:
-	docker-compose -f docker-compose.dev.yml down -v
+down:
+	docker-compose -f ${COMPOSE} down -v
 
-dev_restart: dev_down dev_up
+up:
+	docker-compose -f ${COMPOSE} up -dV --build
+
+restart: down up
+
+ps:
+	docker-compose -f ${COMPOSE} ps
+
+logs:
+	docker-compose -f ${COMPOSE} logs -f ${SVC}
+
+exec:
+	docker-compose -f ${COMPOSE} exec ${SVC} sh

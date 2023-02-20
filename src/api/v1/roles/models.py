@@ -17,6 +17,20 @@ role_create = Model(
     }
 )
 
+role_assign = Model(
+    'RoleAssign',
+    {
+        'user_id': fields.String(required=True),
+        'role_id': fields.String(required=True),
+    }
+)
+
+admin_required_model = Model(
+    "AdminRequired", {
+        "msg": fields.String(required=True)
+    }
+)
+
 role_patch = SchemaModel(
     'RolePatch',
     {

@@ -5,6 +5,7 @@ from typing import Type
 from flask_sqlalchemy import SQLAlchemy
 
 from models.role import Role, RoleSchema
+from models.user import User
 
 
 class RoleService:
@@ -100,6 +101,22 @@ class RoleService:
         self.db.session.commit()
 
         return True
+
+    def assign(self, user_id, role_id):
+        role = self._get_by_id(role_id)
+        if not role:
+            return None
+
+        user = User.query.filter_by(id=user_id).first()
+        if not user:
+            return None
+
+        user.roles.append(role)
+        self.db.session.add(user)
+        self.db.session.commit()
+
+        return True
+
 
 
 @lru_cache()

@@ -8,6 +8,18 @@ from db import db
 from utils import utc
 from models.role import Role
 
+users_roles = db.Table('users_roles',
+    db.Column('user_id', db.UUID, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('role_id', db.UUID, db.ForeignKey('roles.id'), primary_key=True)
+)
+
+# class Page(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     tags = db.relationship('Tag', secondary=tags, lazy='subquery',
+#         backref=db.backref('pages', lazy=True))
+
+# class Tag(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
 
 class User(db.Model):
     """Есть разные способы хэширования паролей. Можно делать это на уровне
@@ -51,7 +63,9 @@ class User(db.Model):
     modified = db.Column(db.DateTime, nullable=False, default=utc(), onupdate=utc())
 
     history = relationship('UserHistory')
-    roles = relationship('UsersRoles')
+    # roles = relationship('UsersRoles')
+    roles = db.relationship('Role', secondary=users_roles, lazy='subquery',
+        backref=db.backref('users', lazy=True))
 
     @classmethod
     def find_by_email(cls, email):
@@ -61,12 +75,12 @@ class User(db.Model):
         return f'<User {self.email}>'
 
 
-class UsersRoles(db.Model):
-    __tablename__ = 'users_roles'
+# class UsersRoles(db.Model):
+#     __tablename__ = 'users_roles'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), ForeignKey(User.id))
-    role_id = db.Column(UUID(as_uuid=True), ForeignKey(Role.id))
+#     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+#     user_id = db.Column(UUID(as_uuid=True), ForeignKey(User.id))
+#     role_id = db.Column(UUID(as_uuid=True), ForeignKey(Role.id))
 
 
 class UserHistory(db.Model):

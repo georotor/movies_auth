@@ -24,7 +24,7 @@ class UserService:
         db.session.commit()
         self.id = new_user.id
 
-        return TokenService.create(user=new_user)
+        return TokenService.create(user_id=new_user.id)
 
     def login(self, username, password):
         user = User.query.filter_by(email=username).first()
