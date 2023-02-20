@@ -38,6 +38,11 @@ class TokenService:
             additional_claims={'refresh_jti': get_jti(refresh_token)},
             fresh=fresh,
         )
+        rd.set(
+            'refresh_token: {}'.format(user_id),
+            get_jti(refresh_token),
+            ex=config.JWT_REFRESH_TOKEN_EXPIRES
+        )
 
         return access_token, refresh_token
 
@@ -58,8 +63,22 @@ class TokenService:
         пользователем учетных данных).
 
         """
+        token = get_jwt()
         identity = get_jwt_identity()
+        if not TokenService.is_actual(refresh_token=token, user_id=identity):
+            raise TokenError('Token authentication failed')
         return TokenService.create(identity, fresh=False)
+
+    @staticmethod
+    def is_actual(refresh_token, user_id):
+        """Проверка актуальности refresh токена (актуальным считается последний
+        выпущенный).
+
+        """
+        reference = rd.get('refresh_token: {}'.format(user_id))
+        if refresh_token["jti"] != reference:
+            return False
+        return True
 
     @staticmethod
     def expired_at(token):

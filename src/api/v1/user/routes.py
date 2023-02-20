@@ -16,7 +16,7 @@ from flask_jwt_extended import jwt_required
 from flask_restx import Namespace, Resource, abort
 
 from services.auth import AuthError, AuthService
-from services.token import TokenService
+from services.token import TokenService, TokenError
 
 from .models import token, tokens, user_create
 
@@ -135,6 +135,9 @@ class LogOut(Resource):
 class Refresh(Resource):
     @user.marshal_with(tokens, code=int(HTTPStatus.CREATED))
     @user.response(
+        int(HTTPStatus.UNAUTHORIZED), 'Token authentication failed.'
+    )
+    @user.response(
         int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
     )
     @jwt_required(refresh=True)
@@ -143,7 +146,11 @@ class Refresh(Resource):
         токена.
 
         """
-        access_token, refresh_token = token_service.refresh()
+        try:
+            access_token, refresh_token = token_service.refresh()
+        except TokenError:
+            abort(HTTPStatus.UNAUTHORIZED, 'Token authentication failed.')
+            return
 
         tokens_ = {
             'access': {
