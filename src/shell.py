@@ -1,5 +1,6 @@
 import click
 from flask import Blueprint
+from werkzeug.security import generate_password_hash
 
 from models.user import User, db
 
@@ -17,7 +18,7 @@ def create(email, password, admin):
         user = User(email=email)
         db.session.add(user)
 
-    user.password = password
+    user.password = generate_password_hash(password)
     user.is_admin = admin
 
     db.session.commit()
