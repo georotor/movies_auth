@@ -1,23 +1,29 @@
 """ Модели для валидации входных и выходных данных """
 
-from flask_restx import Model, fields
+from flask_restx import Model, fields, SchemaModel
+
+EMAIL_PATTERN = r'^([A-Za-z0-9]+[.\-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$'
 
 user_create = Model(
     'UserCreate',
     {
         'email': fields.String(
             required=True,
-            pattern=r'^([A-Za-z0-9]+[.\-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$'
+            pattern=EMAIL_PATTERN,
         ),
         'password': fields.String(required=True, min_length=8)
     }
 )
 
-user_update = Model(
+user_update = SchemaModel(
     'UserUpdate',
     {
-        'new_password': fields.String(required=True, min_length=8),
-        'confirmed_password': fields.String(required=True, min_length=8)
+        'type': 'object',
+        'properties': {
+            'email': {'type': 'string', 'pattern': EMAIL_PATTERN},
+            'password': {'type': 'string', 'min_length': 8},
+        },
+        'anyOf': [{'required': ['email']}, {'required': ['password']}]
     }
 )
 
@@ -35,5 +41,14 @@ tokens = Model(
     {
         'access': fields.Nested(token),
         'refresh': fields.Nested(token)
+    }
+)
+
+user_history = Model(
+    'UserHistory',
+    {
+        'user_agent': fields.String,
+        'action': fields.String,
+        'created': fields.DateTime,
     }
 )
