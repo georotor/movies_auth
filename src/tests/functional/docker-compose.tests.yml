@@ -2,6 +2,7 @@ version: '3'
 services:
   db:
     image: postgres:13
+    container_name: db_test
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -26,6 +27,10 @@ services:
     image: api-image
     env_file:
       - .env.tests
+    volumes:
+      - ../../../src:/opt/app/
+    #entrypoint: gunicorn main:app -w 1 -b 0.0.0.0:5000
+    entrypoint: flask --app main.py run --host 0.0.0.0
     ports:
       - 5000:5000
     depends_on:
@@ -37,6 +42,8 @@ services:
     image: api-image
     env_file:
       - .env.tests
+    volumes:
+      - ../../../src:/opt/app/
     entrypoint: >
       sh -c "/usr/local/bin/pip3 install -U pip \
       && /usr/local/bin/pip3 install -r /opt/app/tests/functional/requirements.txt \
