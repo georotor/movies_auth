@@ -82,5 +82,4 @@ class TokenService:
 
     @staticmethod
     def expired_at(token):
-        datetime.utcfromtimestamp(decode_token(token)['exp'])
-        return datetime.now(timezone.utc) + config.JWT_ACCESS_TOKEN_EXPIRES
+        return datetime.utcfromtimestamp(decode_token(token)['exp'])
