@@ -5,11 +5,22 @@ from flask_restx import Model, fields
 user_create = Model(
     'UserCreate',
     {
-        'email': fields.String(required=True,
-                               pattern=r'^([A-Za-z0-9]+[.\-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$'),
+        'email': fields.String(
+            required=True,
+            pattern=r'^([A-Za-z0-9]+[.\-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$'
+        ),
         'password': fields.String(required=True, min_length=8)
     }
 )
+
+user_update = Model(
+    'UserUpdate',
+    {
+        'new_password': fields.String(required=True, min_length=8),
+        'confirmed_password': fields.String(required=True, min_length=8)
+    }
+)
+
 
 token = Model(
     'Token',
