@@ -18,13 +18,14 @@ from flask_restx import Namespace, Resource, abort
 from services.auth import AuthError, AuthService
 from services.token import TokenService, TokenError
 
-from .models import token, tokens, user_create
+from .models import token, tokens, user_create, user_update
 
 auth_service = AuthService()
 token_service = TokenService()
 
 user = Namespace('user', description='Авторизация пользователей')
 user.models[user_create.name] = user_create
+user.models[user_update.name] = user_update
 user.models[token.name] = token
 user.models[tokens.name] = tokens
 
@@ -165,3 +166,36 @@ class Refresh(Resource):
 
         return tokens_
 
+
+@user.route('/update')
+class Update(Resource):
+    @user.expect(user_update, validate=True)
+    @user.response(
+        int(HTTPStatus.OK), 'Password changed successfully. Login again.'
+    )
+    @user.response(
+        int(HTTPStatus.UNPROCESSABLE_ENTITY), 'Passwords does not match.'
+    )
+    @user.response(int(HTTPStatus.UNAUTHORIZED), 'No such user.')
+    @user.response(
+        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
+    )
+    @jwt_required(fresh=True)
+    def post(self):
+        """Смена пароля. Только для пользователей со "свежими" (fresh)
+        токенами, которые недавно вручную вводили данные УЗ. После смены пароля
+        сбрасывает аутентификацию и отзывает токены.
+
+        """
+        passwords = request.json
+        if passwords['new_password'] != passwords['confirmed_password']:
+            abort(HTTPStatus.UNPROCESSABLE_ENTITY, 'Passwords does not match.')
+
+        user_id = token_service.get_user_id()
+        try:
+            auth_service.change_password(user_id, passwords['new_password'])
+        except AuthError:
+            abort(HTTPStatus.UNAUTHORIZED, 'No such user.')
+
+        token_service.delete()
+        return 'Password changed successfully. Login again.', HTTPStatus.OK

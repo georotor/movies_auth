@@ -98,6 +98,15 @@ class AuthService:
         return user.id
 
     @staticmethod
+    def change_password(user_id: UUID, new_password: str):
+        user = User.query.filter_by(id=user_id).one_or_none()
+        if user is None:
+            raise AuthError("No such user")
+        user.password = generate_password_hash(new_password)
+        if db.session.is_modified(user):
+            db.session.commit()
+
+    @staticmethod
     def remember_login(user_id: UUID, user_agent: str, action: str = 'login'):
         """Запись о логине пользователя. Валидация данных перенесена в restx и
         убрана из схемы.
