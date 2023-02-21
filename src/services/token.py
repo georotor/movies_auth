@@ -84,3 +84,7 @@ class TokenService:
     def expired_at(token):
         datetime.utcfromtimestamp(decode_token(token)['exp'])
         return datetime.now(timezone.utc) + config.JWT_ACCESS_TOKEN_EXPIRES
+
+    @staticmethod
+    def get_user_id():
+        return get_jwt_identity()
