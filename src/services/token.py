@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from flask_jwt_extended import (create_access_token, create_refresh_token,
@@ -17,7 +17,7 @@ class TokenError(Exception):
 
 class TokenService:
     @staticmethod
-    def create(user_id: UUID, fresh: bool = True):
+    def create(user_id: UUID, fresh: timedelta | bool = timedelta(minutes=10)):
         """Создаем новую пару access и refresh токенов. Записываем refresh
         токен в redis. Ключом выступает jti (unique identifier of an encoded
         JWT).
@@ -29,7 +29,7 @@ class TokenService:
 
         Args:
           user_id: id пользователя из БД;
-          fresh: "свежесть" токена.
+          fresh: "свежесть" токена. Может быть bool или timedelta.
 
         """
         refresh_token = create_refresh_token(identity=user_id)
