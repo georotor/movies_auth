@@ -6,6 +6,7 @@ from flask_jwt_extended import get_jwt, jwt_required
 
 from .models import role, role_create, role_patch, role_assign, admin_required_model
 from services.role import RoleService
+from services.auth import admin_required
 
 
 roles = Namespace('roles', description='Управление ролями')
@@ -80,10 +81,8 @@ class Roles(Resource):
         return new_role, HTTPStatus.CREATED
 
 
-from services.auth import admin_required
 
 
-from flask import Response
 @roles.route('/assign')
 class RolesAssign(Resource):
     @inject
@@ -91,16 +90,41 @@ class RolesAssign(Resource):
         self.role_service = role_service
         super().__init__(**kwargs)
 
+
+    @roles.response(int(HTTPStatus.OK), 'У пользователя есть такая роль')
+    @roles.response(int(HTTPStatus.BAD_REQUEST), 'Ошибка проверки входных данных.')
+    @roles.response(int(HTTPStatus.NOT_FOUND), 'Роль или пользователь не существует.')
+    @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера.')
+    @admin_required()
+    def get(self):
+        result = self.role_service.get_assigned_role(**roles.payload)
+        if result is None:
+            abort(HTTPStatus.NOT_FOUND, 'Роль или пользователь не существует.')
+        if result is False:
+            abort(HTTPStatus.NOT_FOUND, 'Пользователь не имеет такой роли')
+
+        return
+
     @roles.expect(role_assign, validate=True)
     @roles.response(int(HTTPStatus.OK), 'Роль назначена.')
     @roles.response(int(HTTPStatus.BAD_REQUEST), 'Ошибка проверки входных данных.')
     @roles.response(int(HTTPStatus.NOT_FOUND), 'Роль или пользователь не существует.')
     @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера.')
-    @roles.marshal_with(admin_required_model, code=HTTPStatus.FORBIDDEN)
-    # @roles.response(Response, int(HTTPStatus.FORBIDDEN), 'Внутренняя ошибка сервера.')
     @admin_required()
     def post(self):
-        result = self.role_service.assign(**roles.payload)
+        result = self.role_service.assign_role(**roles.payload)
+        if result is None:
+            abort(HTTPStatus.NOT_FOUND, 'Роль или пользователь не существует.')
+
+        return
+
+    @roles.response(int(HTTPStatus.OK), 'Роль для данного пользователя удалена.')
+    @roles.response(int(HTTPStatus.BAD_REQUEST), 'Ошибка проверки входных данных.')
+    @roles.response(int(HTTPStatus.NOT_FOUND), 'Роль или пользователь не существует.')
+    @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера.')
+    @admin_required()
+    def delete(self):
+        result = self.role_service.delete_assigned_role(**roles.payload)
         if result is None:
             abort(HTTPStatus.NOT_FOUND, 'Роль или пользователь не существует.')
 

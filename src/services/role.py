@@ -102,12 +102,12 @@ class RoleService:
 
         return True
 
-    def assign(self, user_id, role_id):
+    def assign_role(self, user_id: UUID, role_id: UUID):
         role = self._get_by_id(role_id)
         if not role:
             return None
 
-        user = User.query.filter_by(id=user_id).first()
+        user = User.query.filter_by(id=user_id).one_or_none()
         if not user:
             return None
 
@@ -116,6 +116,33 @@ class RoleService:
         self.db.session.commit()
 
         return True
+
+    def get_assigned_role(self, user_id: UUID, role_id: UUID):
+        role = self._get_by_id(role_id)
+        if not role:
+            return None
+
+        user = User.query.filter_by(id=user_id).one_or_none()
+        if not user:
+            return None
+
+        return role in user.roles
+
+    def delete_assigned_role(self, user_id: UUID, role_id: UUID):
+        role = self._get_by_id(role_id)
+        if not role:
+            return None
+
+        user = User.query.filter_by(id=user_id).one_or_none()
+        if not user:
+            return None
+
+        user.roles.remove(role)
+        self.db.session.commit()
+
+        return True
+
+
 
 
 
