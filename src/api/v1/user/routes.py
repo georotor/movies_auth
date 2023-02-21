@@ -181,7 +181,7 @@ class Update(Resource):
         int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
     )
     @jwt_required(fresh=True)
-    def post(self):
+    def patch(self):
         """Смена пароля. Только для пользователей со "свежими" (fresh)
         токенами, которые недавно вручную вводили данные УЗ. После смены пароля
         сбрасывает аутентификацию и отзывает токены.
