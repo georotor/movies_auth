@@ -139,3 +139,15 @@ class AuthService:
                 action=new_log.action,
             )
         )
+        db.session.commit()
+    @staticmethod
+    def login_history(user_id):
+        """Список 10 последних записей входа. """
+        raw_data = db.session.scalars(
+            select(UserHistory).where(UserHistory.user_id == user_id).order_by(
+                UserHistory.created
+            ).limit(10)
+        ).all()
+        history = UserHistorySchema().dump(raw_data, many=True)
+        return history
+
