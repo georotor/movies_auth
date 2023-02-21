@@ -16,7 +16,8 @@ class UserSchema(SQLAlchemyAutoSchema):
 class UserHistorySchema(SQLAlchemyAutoSchema):
     class Meta:
         model = UserHistory
-        fields = ('user_id', 'user_agent', 'action')
+        fields = ('user_id', 'user_agent', 'action', 'created')
+        load_only = ("user_id",)
 
     @post_load
     def create_user_history(self, data, **kwargs):
