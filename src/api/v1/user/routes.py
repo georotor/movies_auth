@@ -18,7 +18,7 @@ from flask_restx import Namespace, Resource, abort
 from services.auth import AuthError, AuthService
 from services.token import TokenService, TokenError
 
-from .models import token, tokens, user_create, user_update
+from .models import token, tokens, user_create, user_update, user_history
 
 auth_service = AuthService()
 token_service = TokenService()
@@ -28,6 +28,7 @@ user.models[user_create.name] = user_create
 user.models[user_update.name] = user_update
 user.models[token.name] = token
 user.models[tokens.name] = tokens
+user.models[user_history.name] = user_history
 
 
 @user.route('/signup')
@@ -171,31 +172,51 @@ class Refresh(Resource):
 class Update(Resource):
     @user.expect(user_update, validate=True)
     @user.response(
-        int(HTTPStatus.OK), 'Password changed successfully. Login again.'
-    )
-    @user.response(
-        int(HTTPStatus.UNPROCESSABLE_ENTITY), 'Passwords does not match.'
+        int(HTTPStatus.OK), 'User profile updated successfully'
     )
     @user.response(int(HTTPStatus.UNAUTHORIZED), 'No such user.')
+    @user.response(
+        int(HTTPStatus.UNPROCESSABLE_ENTITY), 'Email already in use.'
+    )
     @user.response(
         int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
     )
     @jwt_required(fresh=True)
     def patch(self):
-        """Смена пароля. Только для пользователей со "свежими" (fresh)
-        токенами, которые недавно вручную вводили данные УЗ. После смены пароля
-        сбрасывает аутентификацию и отзывает токены.
+        """Обновление данных профиля пользователя. Только для пользователей со
+        "свежими" (fresh) токенами, которые недавно вручную вводили данные УЗ.
 
         """
-        passwords = request.json
-        if passwords['new_password'] != passwords['confirmed_password']:
-            abort(HTTPStatus.UNPROCESSABLE_ENTITY, 'Passwords does not match.')
 
-        user_id = token_service.get_user_id()
+        data = request.json
+        data['id'] = token_service.get_user_id()
+
         try:
-            auth_service.change_password(user_id, passwords['new_password'])
+            auth_service.update_user(data)
         except AuthError:
             abort(HTTPStatus.UNAUTHORIZED, 'No such user.')
+        except ValueError:
+            abort(HTTPStatus.UNPROCESSABLE_ENTITY, 'Email already in use.')
 
-        token_service.delete()
-        return 'Password changed successfully. Login again.', HTTPStatus.OK
+        return 'User profile updated successfully.', HTTPStatus.OK
+
+
+@user.route('/history')
+class History(Resource):
+    @user.marshal_with(user_history, code=int(HTTPStatus.OK), as_list=True)
+    @user.response(
+        int(HTTPStatus.OK), 'User profile updated successfully'
+    )
+    @user.response(
+        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
+    )
+    @jwt_required(fresh=True)
+    def get(self):
+        """Обновление данных профиля пользователя. Только для пользователей со
+        "свежими" (fresh) токенами, которые недавно вручную вводили данные УЗ.
+
+        """
+
+        user_id = token_service.get_user_id()
+        history = auth_service.login_history(user_id)
+        return history, HTTPStatus.OK
