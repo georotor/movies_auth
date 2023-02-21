@@ -11,7 +11,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import db
 from models.user import User, UserHistory
-from schemas.auth import LoginSchema, RegistrationSchema
+from schemas.auth import LoginSchema, RegistrationSchema, UpdateUserSchema
 from schemas.user import UserHistorySchema
 
 auth = Blueprint("auth", __name__)
@@ -98,12 +98,21 @@ class AuthService:
         return user.id
 
     @staticmethod
-    def change_password(user_id: UUID, new_password: str):
-        user = User.query.filter_by(id=user_id).one_or_none()
+    def update_user(data):
+        new_user = UpdateUserSchema().load(data)
+        user = User.query.filter_by(id=new_user.id).one_or_none()
         if user is None:
             raise AuthError("No such user")
-        user.password = generate_password_hash(new_password)
-        if db.session.is_modified(user):
+
+        if new_user.email != user.email:
+            if AuthService.find_user(new_user.email) is not None:
+                raise ValueError("Email already in use")
+
+        if new_user.password:
+            user.password = generate_password_hash(new_user.password)
+        user.email = new_user.email or user.email
+
+        if db.session.is_modified(new_user):
             db.session.commit()
 
     @staticmethod
