@@ -108,6 +108,7 @@ class LogIn(Resource):
 @user.doc(security='Bearer')
 class LogOut(Resource):
     @user.response(int(HTTPStatus.OK), 'Tokens successfully revoked.')
+    @user.response(int(HTTPStatus.UNAUTHORIZED), 'Token authentication failed.')
     @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
     @jwt_required()
     def delete(self):

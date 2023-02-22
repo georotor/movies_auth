@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import Optional
 from uuid import UUID
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, abort
 from flask_jwt_extended import JWTManager, get_jwt, verify_jwt_in_request
 from sqlalchemy import insert, select
 from sqlalchemy.exc import NoResultFound
@@ -30,7 +30,7 @@ def admin_required():
             verify_jwt_in_request()
             claims = get_jwt()
             if not claims["is_admin"]:
-                return jsonify(msg="Access denied"), HTTPStatus.FORBIDDEN
+                abort(HTTPStatus.FORBIDDEN, 'Access denied')
             return func(*args, **kwargs)
         return decorator
     return wrapper

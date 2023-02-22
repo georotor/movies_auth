@@ -3,8 +3,6 @@ services:
   db:
     image: postgres:13
     container_name: db_test
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     env_file:
@@ -14,7 +12,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
   redis:
     image: redis:7.0.7
     ports:
@@ -27,10 +24,8 @@ services:
     image: api-image
     env_file:
       - .env.tests
-    volumes:
-      - ../../../src:/opt/app/
     #entrypoint: gunicorn main:app -w 1 -b 0.0.0.0:5000
-    entrypoint: flask --app main.py run --host 0.0.0.0
+    entrypoint: flask --app main:app run --host=0.0.0.0
     ports:
       - 5000:5000
     depends_on:
@@ -42,14 +37,14 @@ services:
     image: api-image
     env_file:
       - .env.tests
-    volumes:
-      - ../../../src:/opt/app/
     entrypoint: >
-      sh -c "/usr/local/bin/pip3 install -U pip \
+      sh -c "flask db init \
+      && flask db migrate \
+      && flask db upgrade \
+      && flask user --password 123qweasd user@roles.test \
+      && flask user --admin --password 123qweasd admin@roles.test \
+      && /usr/local/bin/pip3 install -U pip \
       && /usr/local/bin/pip3 install -r /opt/app/tests/functional/requirements.txt \
       && /usr/local/bin/python3 -m pytest /opt/app/tests/functional/src"
     depends_on:
       - api
-
-volumes:
-  postgres_data:

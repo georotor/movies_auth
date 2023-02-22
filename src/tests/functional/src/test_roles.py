@@ -1,51 +1,212 @@
 import pytest
-import json
-from http.server import HTTPStatus
-import requests
+from http import HTTPStatus
 from faker import Faker
 
 fake: Faker = Faker()
-roles_url = f'http://localhost:5000/api/v1/roles'
+pytestmark = pytest.mark.asyncio
 
-def test_create_role():
+
+@pytest.fixture(scope='session')
+async def user_tokens(make_json_request):
+    url = '/api/v1/user/login'
+    users = {
+        'user': (await make_json_request(url=url, json={"email": "user@roles.test", "password": "123qweasd"})).body,
+        'admin': (await make_json_request(url=url, json={"email": "admin@roles.test", "password": "123qweasd"})).body
+    }
+
+    yield users
+
+
+async def test_create_role(make_json_request, user_tokens):
     name = fake.job()
     description = fake.text()
 
-    response = requests.post(url=roles_url, json={"name": name, "description": description})
+    response = await make_json_request(
+        url='/api/v1/roles',
+        json={"name": name, "description": description},
+        auth_token=user_tokens['admin']['access']['token']
+    )
 
-    assert response.status_code == HTTPStatus.CREATED
-    assert response.json()['name'] == name
-    assert response.json()['description'] == description
+    assert response.status == HTTPStatus.CREATED
+    assert response.body['name'] == name
+    assert response.body['description'] == description
 
-def test_create_duplicate_role():
+
+async def test_create_role_not_admin(make_json_request, user_tokens):
     name = fake.job()
     description = fake.text()
 
-    requests.post(url=roles_url, json={"name": name, "description": description})
-    response = requests.post(url=roles_url, json={"name": name, "description": description})
+    response = await make_json_request(
+        url='/api/v1/roles',
+        json={"name": name, "description": description},
+        auth_token=user_tokens['user']['access']['token']
+    )
 
-    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.status == HTTPStatus.FORBIDDEN
 
 
-def test_get_roles():
-    response = requests.get(url=roles_url)
+async def test_create_duplicate_role(make_json_request, user_tokens):
+    name = fake.job()
+    description = fake.text()
 
-    assert 'name' in response.json()[0]
-    assert 'description' in response.json()[0]
-    assert response.status_code == HTTPStatus.OK
+    await make_json_request(
+        url='/api/v1/roles',
+        json={"name": name, "description": description},
+        auth_token=user_tokens['admin']['access']['token']
+    )
+    response = await make_json_request(
+        url='/api/v1/roles',
+        json={"name": name, "description": description},
+        auth_token=user_tokens['admin']['access']['token']
+    )
 
-def test_delete_role():
-    response = requests.get(url=roles_url)
-    role_id = response.json()[0]['id']
+    assert response.status == HTTPStatus.CONFLICT
 
-    response = requests.delete(url=f"{roles_url}/{role_id}")
 
-    assert response.status_code == HTTPStatus.OK
+async def test_get_roles(make_json_request, user_tokens):
+    response = await make_json_request(
+        url='/api/v1/roles',
+        auth_token=user_tokens['admin']['access']['token'],
+        method='GET'
+    )
 
-def test_delete_unknown_role():
+    assert len(response.body) > 0
+    assert response.status == HTTPStatus.OK
+
+
+async def test_get_roles_not_admin(make_json_request, user_tokens):
+    response = await make_json_request(
+        url='/api/v1/roles',
+        auth_token=user_tokens['user']['access']['token'],
+        method='GET'
+    )
+
+    assert response.status == HTTPStatus.FORBIDDEN
+
+
+async def test_update_role(make_json_request, user_tokens):
+    name = fake.job()
+    description = fake.text()
+    token = user_tokens['admin']['access']['token']
+    response = await make_json_request(
+        url='/api/v1/roles',
+        json={'name': name, 'description': description},
+        auth_token=token
+    )
+    role_id = response.body['id']
+
+    response = await make_json_request(
+        url=f'/api/v1/roles/{role_id}',
+        json={'name': f'updated {name}'},
+        auth_token=token,
+        method='PATCH'
+    )
+
+    assert response.status == HTTPStatus.OK
+
+    response = await make_json_request(
+        url=f'/api/v1/roles/{role_id}',
+        json={'description': f'updated {description}'},
+        auth_token=token,
+        method='PATCH'
+    )
+
+    assert response.status == HTTPStatus.OK
+
+    response = await make_json_request(
+        url='/api/v1/roles',
+        auth_token=token,
+        method='GET'
+    )
+    role = next(item for item in response.body if item['id'] == role_id)
+
+    assert role['name'] == f'updated {name}'
+    assert role['description'] == f'updated {description}'
+
+
+async def test_update_role_on_exists(make_json_request, user_tokens):
+    name = fake.job()
+    token = user_tokens['admin']['access']['token']
+    await make_json_request(
+        url='/api/v1/roles',
+        json={'name': name},
+        auth_token=token
+    )
+    response = await make_json_request(
+        url='/api/v1/roles',
+        json={'name': f'Two {name}'},
+        auth_token=token
+    )
+    role_id = response.body['id']
+
+    response = await make_json_request(
+        url=f'/api/v1/roles/{role_id}',
+        json={'name': name},
+        auth_token=token,
+        method='PATCH'
+    )
+
+    assert response.status == HTTPStatus.CONFLICT
+
+
+async def test_update_role_not_admin(make_json_request, user_tokens):
     role_id = fake.uuid4()
 
-    response = requests.delete(url=f"{roles_url}/{role_id}")
+    response = await make_json_request(
+        url=f'/api/v1/roles/{role_id}',
+        json={'name': 'name'},
+        auth_token=user_tokens['user']['access']['token'],
+        method='PATCH'
+    )
 
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status == HTTPStatus.FORBIDDEN
 
+
+async def test_delete_role(make_json_request, user_tokens):
+    response = await make_json_request(
+        url='/api/v1/roles',
+        json={"name": "Test delete role"},
+        auth_token=user_tokens['admin']['access']['token']
+    )
+    role_id = response.body["id"]
+
+    response = await make_json_request(
+        url=f'/api/v1/roles/{role_id}',
+        auth_token=user_tokens['admin']['access']['token'],
+        method='DELETE'
+    )
+
+    assert response.status == HTTPStatus.OK
+
+    response = await make_json_request(
+        url=f'/api/v1/roles/{role_id}',
+        json={"name": "Test delete role"},
+        auth_token=user_tokens['admin']['access']['token'],
+        method='PATCH'
+    )
+
+    assert response.status == HTTPStatus.NOT_FOUND
+
+
+async def test_delete_unknown_role(make_json_request, user_tokens):
+    role_id = fake.uuid4()
+
+    response = await make_json_request(
+        url=f'/api/v1/roles/{role_id}',
+        auth_token=user_tokens['admin']['access']['token'],
+        method='DELETE'
+    )
+
+    assert response.status == HTTPStatus.NOT_FOUND
+
+
+async def test_delete_not_admin(make_json_request, user_tokens):
+    role_id = fake.uuid4()
+
+    response = await make_json_request(
+        url=f'/api/v1/roles/{role_id}',
+        auth_token=user_tokens['user']['access']['token'],
+        method='DELETE'
+    )
+
+    assert response.status == HTTPStatus.FORBIDDEN
