@@ -115,6 +115,7 @@ class LogIn(Resource):
 
 
 @user.route('/logout')
+@user.doc(security='Bearer')
 class LogOut(Resource):
     @user.response(
         int(HTTPStatus.OK), 'Tokens successfully revoked.'
@@ -134,6 +135,7 @@ class LogOut(Resource):
 
 
 @user.route('/refresh')
+@user.doc(security='Bearer')
 class Refresh(Resource):
     @user.marshal_with(tokens, code=int(HTTPStatus.CREATED))
     @user.response(
@@ -169,6 +171,7 @@ class Refresh(Resource):
 
 
 @user.route('/update')
+@user.doc(security='Bearer')
 class Update(Resource):
     @user.expect(user_update, validate=True)
     @user.response(
@@ -202,6 +205,7 @@ class Update(Resource):
 
 
 @user.route('/history')
+@user.doc(security='Bearer')
 class History(Resource):
     @user.marshal_with(user_history, code=int(HTTPStatus.OK), as_list=True)
     @user.response(

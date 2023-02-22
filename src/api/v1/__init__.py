@@ -12,6 +12,12 @@ api = Api(
     version="1.0",
     title="Auth API",
     description="Модуль авторизации",
+    authorizations={
+        'Bearer': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'}
+    }
 )
 
 api.add_namespace(user, path='/user')
