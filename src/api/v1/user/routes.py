@@ -35,16 +35,12 @@ user.models[user_history.name] = user_history
 class SignUp(Resource):
     @user.expect(user_create, validate=True)
     @user.marshal_with(tokens, code=int(HTTPStatus.CREATED))
-    @user.response(
-        int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.'
-    )
+    @user.response(int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.')
     @user.response(int(HTTPStatus.CONFLICT), 'Email is already registered.')
-    @user.response(
-        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
-    )
+    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
     def post(self):
-        """Регистрация пользователя в дополнительной валидацией данных. После
-        регистрации пользователь сразу считается аутентифицированным.
+        """Регистрация пользователя.
+        После регистрации пользователь сразу считается аутентифицированным.
 
         """
         try:
@@ -69,24 +65,18 @@ class SignUp(Resource):
             },
         }
 
-        return tokens_
+        return tokens_, HTTPStatus.CREATED
 
 
 @user.route('/login')
 class LogIn(Resource):
     @user.expect(user_create, validate=True)
-    @user.marshal_with(tokens, code=int(HTTPStatus.CREATED))
-    @user.response(
-        int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.'
-    )
-    @user.response(
-        int(HTTPStatus.UNAUTHORIZED), 'Invalid username or password.'
-    )
-    @user.response(
-        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
-    )
+    @user.marshal_with(tokens, code=int(HTTPStatus.OK))
+    @user.response(int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.')
+    @user.response(int(HTTPStatus.UNAUTHORIZED), 'Invalid username or password.')
+    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
     def post(self):
-        """Аутентификация пользователя в дополнительной валидацией данных.
+        """Аутентификация пользователя.
 
         """
         try:
@@ -117,12 +107,8 @@ class LogIn(Resource):
 @user.route('/logout')
 @user.doc(security='Bearer')
 class LogOut(Resource):
-    @user.response(
-        int(HTTPStatus.OK), 'Tokens successfully revoked.'
-    )
-    @user.response(
-        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
-    )
+    @user.response(int(HTTPStatus.OK), 'Tokens successfully revoked.')
+    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
     @jwt_required()
     def delete(self):
         """Отзываем access токен и связанный с ним refresh токен. Это
@@ -131,19 +117,15 @@ class LogOut(Resource):
 
         """
         token_service.delete()
-        return HTTPStatus.OK, 'Tokens successfully revoked.'
+        return 'Tokens successfully revoked.', HTTPStatus.OK
 
 
 @user.route('/refresh')
 @user.doc(security='Bearer')
 class Refresh(Resource):
     @user.marshal_with(tokens, code=int(HTTPStatus.CREATED))
-    @user.response(
-        int(HTTPStatus.UNAUTHORIZED), 'Token authentication failed.'
-    )
-    @user.response(
-        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
-    )
+    @user.response(int(HTTPStatus.UNAUTHORIZED), 'Token authentication failed.')
+    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
     @jwt_required(refresh=True)
     def post(self):
         """Получение новой пары токенов на основании действующего refresh
@@ -167,23 +149,18 @@ class Refresh(Resource):
             },
         }
 
-        return tokens_
+        return tokens_, HTTPStatus.CREATED
 
 
 @user.route('/update')
 @user.doc(security='Bearer')
 class Update(Resource):
     @user.expect(user_update, validate=True)
-    @user.response(
-        int(HTTPStatus.OK), 'User profile updated successfully'
-    )
-    @user.response(int(HTTPStatus.UNAUTHORIZED), 'No such user.')
-    @user.response(
-        int(HTTPStatus.UNPROCESSABLE_ENTITY), 'Email already in use.'
-    )
-    @user.response(
-        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
-    )
+    @user.response(int(HTTPStatus.OK), 'User profile updated successfully')
+    @user.response(int(HTTPStatus.UNAUTHORIZED), 'No such user')
+    @user.response(int(HTTPStatus.UNPROCESSABLE_ENTITY), 'Email already in use')
+    @user.response(int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed')
+    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error')
     @jwt_required(fresh=True)
     def patch(self):
         """Обновление данных профиля пользователя. Только для пользователей со
@@ -208,16 +185,11 @@ class Update(Resource):
 @user.doc(security='Bearer')
 class History(Resource):
     @user.marshal_with(user_history, code=int(HTTPStatus.OK), as_list=True)
-    @user.response(
-        int(HTTPStatus.OK), 'User profile updated successfully'
-    )
-    @user.response(
-        int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.'
-    )
-    @jwt_required(fresh=True)
+    @user.response(int(HTTPStatus.OK), 'User profile updated successfully')
+    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error')
+    @jwt_required()
     def get(self):
-        """Обновление данных профиля пользователя. Только для пользователей со
-        "свежими" (fresh) токенами, которые недавно вручную вводили данные УЗ.
+        """Список последних действий пользователя.
 
         """
 
