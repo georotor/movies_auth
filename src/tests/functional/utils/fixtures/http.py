@@ -71,3 +71,32 @@ def make_post_request(session):
                 status=response.status,
             )
     return inner
+
+
+@pytest.fixture(scope='session')
+def make_json_request(session):
+    """
+    Фикстура для выполнения запросов.
+
+    :param session: Клиент aiohttp.
+    :return: Функция выполнения POST запросов.
+    """
+    async def inner(
+            url: str,
+            json: dict | None = None,
+            headers: dict | None = None,
+            auth_token: str | None = None,
+            method: str = 'POST'
+    ):
+        json = json or {}
+        headers = headers or {}
+        if auth_token:
+            headers['Authorization'] = f'Bearer {auth_token}'
+        url = test_settings.service_url + url
+        async with session.request(method, url, json=json, headers=headers) as response:
+            return HTTPResponse(
+                body=await response.json(),
+                headers=response.headers,
+                status=response.status,
+            )
+    return inner

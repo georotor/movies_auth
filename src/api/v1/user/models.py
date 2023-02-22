@@ -21,7 +21,7 @@ user_update = SchemaModel(
         'type': 'object',
         'properties': {
             'email': {'type': 'string', 'pattern': EMAIL_PATTERN},
-            'password': {'type': 'string', 'min_length': 8},
+            'password': {'type': 'string', 'minLength': 8},
         },
         'anyOf': [{'required': ['email']}, {'required': ['password']}]
     }
