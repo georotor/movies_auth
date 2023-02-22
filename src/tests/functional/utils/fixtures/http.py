@@ -89,7 +89,7 @@ def make_json_request(session):
             method: str = 'POST'
     ):
         json = json or {}
-        headers = headers or {}
+        headers = headers or {'Content-Type': 'application/json'}
         if auth_token:
             headers['Authorization'] = f'Bearer {auth_token}'
         url = test_settings.service_url + url
