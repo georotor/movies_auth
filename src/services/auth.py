@@ -11,7 +11,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import db
 from models.user import User, UserHistory
-from schemas.auth import LoginSchema, RegistrationSchema
+from schemas.auth import LoginSchema, RegistrationSchema, UpdateUserSchema
 from schemas.user import UserHistorySchema
 
 auth = Blueprint("auth", __name__)
@@ -98,6 +98,24 @@ class AuthService:
         return user.id
 
     @staticmethod
+    def update_user(data):
+        new_user = UpdateUserSchema().load(data)
+        user = User.query.filter_by(id=new_user.id).one_or_none()
+        if user is None:
+            raise AuthError("No such user")
+
+        if new_user.email != user.email:
+            if AuthService.find_user(new_user.email) is not None:
+                raise ValueError("Email already in use")
+
+        if new_user.password:
+            user.password = generate_password_hash(new_user.password)
+        user.email = new_user.email or user.email
+
+        if db.session.is_modified(new_user):
+            db.session.commit()
+
+    @staticmethod
     def remember_login(user_id: UUID, user_agent: str, action: str = 'login'):
         """Запись о логине пользователя. Валидация данных перенесена в restx и
         убрана из схемы.
@@ -121,3 +139,15 @@ class AuthService:
                 action=new_log.action,
             )
         )
+        db.session.commit()
+    @staticmethod
+    def login_history(user_id):
+        """Список 10 последних записей входа. """
+        raw_data = db.session.scalars(
+            select(UserHistory).where(UserHistory.user_id == user_id).order_by(
+                UserHistory.created
+            ).limit(10)
+        ).all()
+        history = UserHistorySchema().dump(raw_data, many=True)
+        return history
+
