@@ -4,14 +4,14 @@ from typing import Optional
 from uuid import UUID
 
 from flask import abort
-from flask_jwt_extended import verify_jwt_in_request, get_jwt
-from sqlalchemy import select, insert
+from flask_jwt_extended import get_jwt, verify_jwt_in_request
+from sqlalchemy import insert, select
 from sqlalchemy.exc import NoResultFound
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from models.user import User, db, UserHistory
-from schemas.user import LoginSchema, RegistrationSchema, UpdateUserSchema, \
-    UserHistorySchema
+from models.user import User, UserHistory, db
+from schemas.user import (LoginSchema, RegistrationSchema, UpdateUserSchema,
+                          UserHistorySchema)
 
 
 class AuthError(Exception):
@@ -119,12 +119,13 @@ class UserService:
         )
         db.session.commit()
     @staticmethod
-    def login_history(user_id):
+    def login_history(user_id, page_number=1, page_size=10):
         """Список 10 последних записей входа. """
+        offset = page_number - 1
         raw_data = db.session.scalars(
             select(UserHistory).where(UserHistory.user_id == user_id).order_by(
                 UserHistory.created.desc()
-            ).limit(10)
+            ).limit(page_size).offset(offset * page_size)
         ).all()
         history = UserHistorySchema().dump(raw_data, many=True)
         return history
