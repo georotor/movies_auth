@@ -15,12 +15,12 @@ from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restx import Namespace, Resource, abort
 
-from services.auth import AuthError, AuthService
+from services.user import AuthError, UserService
 from services.token import TokenService, TokenError
 
 from .models import token, tokens, user_create, user_update, user_history
 
-auth_service = AuthService()
+user_service = UserService()
 token_service = TokenService()
 
 user = Namespace('user', description='Авторизация пользователей')
@@ -44,13 +44,13 @@ class SignUp(Resource):
 
         """
         try:
-            user_id = auth_service.registration(request.json)
+            user_id = user_service.registration(request.json)
         except AuthError:
             abort(HTTPStatus.CONFLICT, 'Email is already registered.')
             return
 
         user_agent = request.user_agent.string
-        auth_service.remember_login(user_id, user_agent, action='registration')
+        user_service.remember_login(user_id, user_agent, action='registration')
 
         access_token, refresh_token = token_service.create(user_id, fresh=True)
 
@@ -80,13 +80,13 @@ class LogIn(Resource):
 
         """
         try:
-            user_id = auth_service.login(request.json)
+            user_id = user_service.login(request.json)
         except AuthError:
             abort(HTTPStatus.UNAUTHORIZED, 'Invalid username or password.')
             return
 
         user_agent = request.user_agent.string
-        auth_service.remember_login(user_id, user_agent)
+        user_service.remember_login(user_id, user_agent)
 
         access_token, refresh_token = token_service.create(user_id, fresh=True)
 
@@ -173,7 +173,7 @@ class Update(Resource):
         data['id'] = token_service.get_user_id()
 
         try:
-            auth_service.update_user(data)
+            user_service.update_user(data)
         except AuthError:
             abort(HTTPStatus.UNAUTHORIZED, 'No such user.')
         except ValueError:
@@ -195,5 +195,5 @@ class History(Resource):
         """
 
         user_id = token_service.get_user_id()
-        history = auth_service.login_history(user_id)
+        history = user_service.login_history(user_id)
         return history, HTTPStatus.OK

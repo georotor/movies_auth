@@ -5,8 +5,7 @@ from flask_restx import Namespace, Resource, abort
 
 from .models import role, role_create, role_patch, role_assign, admin_required_model
 from services.role import RoleService
-from services.auth import admin_required
-
+from services.user import admin_required
 
 roles = Namespace('roles', description='Управление ролями, доступно авторизованным администраторам')
 roles.models[role.name] = role
