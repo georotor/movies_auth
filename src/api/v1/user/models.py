@@ -10,6 +10,7 @@ user_create = Model(
         'email': fields.String(
             required=True,
             pattern=EMAIL_PATTERN,
+            max_length=80
         ),
         'password': fields.String(required=True, min_length=8)
     }
@@ -20,7 +21,7 @@ user_update = SchemaModel(
     {
         'type': 'object',
         'properties': {
-            'email': {'type': 'string', 'pattern': EMAIL_PATTERN},
+            'email': {'type': 'string', 'pattern': EMAIL_PATTERN, 'maxLength': 80},
             'password': {'type': 'string', 'minLength': 8},
         },
         'anyOf': [{'required': ['email']}, {'required': ['password']}]
@@ -55,8 +56,8 @@ user_history_request = Model(
 user_history = Model(
     'UserHistory',
     {
-        'user_agent': fields.String,
-        'action': fields.String,
+        'user_agent': fields.String(max_length=255),
+        'action': fields.String(max_length=100),
         'created': fields.DateTime,
     }
 )
