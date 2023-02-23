@@ -4,16 +4,16 @@ role = Model(
     'Role',
     {
         'id': fields.String(required=True),
-        'name': fields.String(required=True),
-        'description': fields.String()
+        'name': fields.String(required=True, max_length=80),
+        'description': fields.String(max_length=255)
     }
 )
 
 role_create = Model(
     'RoleCreate',
     {
-        'name': fields.String(required=True),
-        'description': fields.String()
+        'name': fields.String(required=True, max_length=80),
+        'description': fields.String(max_length=255)
     }
 )
 
@@ -36,8 +36,8 @@ role_patch = SchemaModel(
     {
         'type': 'object',
         'properties': {
-            'name': {'type': 'string'},
-            'description': {'type': 'string'},
+            'name': {'type': 'string', 'maxLength': 80},
+            'description': {'type': 'string', 'maxLength': 255},
         },
         'anyOf': [{'required': ['name']}, {'required': ['description']}]
     }
