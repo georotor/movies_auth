@@ -51,10 +51,10 @@ class UserService:
             raise AuthError("No such user")
 
         if not check_password_hash(user.password, auth_data.password):
-            logger.debug('Неверный пароль для {}'.format(auth_data.email))
+            logger.debug('Неверный пароль для пользователя <{}>'.format(user.id))
             raise AuthError("Invalid username or password")
 
-        logger.info('Успешная аутентификация {}'.format(auth_data.email))
+        logger.info('Успешная аутентификация <{}>'.format(user.id))
         return user.id
 
     @staticmethod
@@ -68,9 +68,10 @@ class UserService:
         """
         new_user = RegistrationSchema().load(data)
 
-        if UserService.find_user(new_user.email) is not None:
-            logger.debug('Попытка регистрации с занятым email {}'.format(
-                new_user.email
+        exist_user = UserService.find_user(new_user.email)
+        if exist_user is not None:
+            logger.debug('Попытка регистрации с занятым email <{}>'.format(
+                exist_user.id
             ))
             raise AuthError("Email already in use")
 
@@ -81,10 +82,10 @@ class UserService:
             )
         )
         db.session.commit()
-        logger.debug('Регистрация нового пользователя {}'.format(
-            new_user.email
-        ))
         user = UserService.find_user(new_user.email)
+        logger.debug('Регистрация нового пользователя <{}>'.format(
+            user.id
+        ))
         return user.id
 
     @staticmethod
@@ -95,22 +96,23 @@ class UserService:
             raise AuthError("No such user")
 
         if new_user.email != user.email:
-            if UserService.find_user(new_user.email) is not None:
-                logger.debug('Обновление данных {}: email {} занят'.format(
-                    new_user.id, new_user.email
+            exist_user = UserService.find_user(new_user.email)
+            if exist_user is not None:
+                logger.debug('Обновление данных <{}>: email занят <{}>'.format(
+                    new_user.id, exist_user.id
                 ))
                 raise ValueError("Email already in use")
 
         if new_user.password:
             user.password = generate_password_hash(new_user.password)
-            logger.info('Пользователь {} изменил пароль'.format(
+            logger.info('Пользователь <{}> изменил пароль'.format(
                 new_user.id
             ))
 
         if new_user.email:
             user.email = new_user.email
-            logger.info('Пользователь {} изменил email на {}'.format(
-                new_user.id, new_user.email
+            logger.info('Пользователь <{}> изменил email'.format(
+                new_user.id
             ))
 
         if db.session.is_modified(user):
@@ -140,8 +142,9 @@ class UserService:
                 action=new_log.action,
             )
         )
-        logger.debug('Запись данных о входе: {}'.format(history_data))
+        logger.debug('Запись данных о входе <{}>'.format(user_id))
         db.session.commit()
+
     @staticmethod
     def login_history(user_id, page_number=1, page_size=10):
         """Список 10 последних записей входа. """
