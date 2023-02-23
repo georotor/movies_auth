@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from os import environ
 
@@ -28,3 +29,5 @@ class Config:
     REDIS_HOST = environ.get('REDIS_HOST', 'localhost')
     REDIS_PORT = int(environ.get('REDIS_PORT', 6379))
     REDIS_DECODE_RESPONSES = True
+
+    LOGGING_LEVEL = logging.INFO
