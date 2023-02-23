@@ -6,17 +6,6 @@ fake: Faker = Faker()
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.fixture(scope='session')
-async def user_tokens(make_json_request):
-    url = '/api/v1/user/login'
-    users = {
-        'user': (await make_json_request(url=url, json={"email": "user@roles.test", "password": "123qweasd"})).body,
-        'admin': (await make_json_request(url=url, json={"email": "admin@roles.test", "password": "123qweasd"})).body
-    }
-
-    yield users
-
-
 async def test_create_role(make_json_request, user_tokens):
     name = fake.job()
     description = fake.text()

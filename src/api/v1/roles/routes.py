@@ -96,11 +96,12 @@ class Roles(InjectResource):
 @roles.response(int(HTTPStatus.UNAUTHORIZED), 'Необходима авторизация')
 @roles.response(int(HTTPStatus.UNPROCESSABLE_ENTITY), 'Некорректный токен авторизации')
 @roles.response(int(HTTPStatus.FORBIDDEN), 'Доступ запрещен')
+@roles.response(int(HTTPStatus.NOT_FOUND), 'Роль или пользователь не существует')
+@roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера')
 class RolesAssign(InjectResource):
+    @roles.expect(role_assign, validate=True)
     @roles.response(int(HTTPStatus.OK), 'У пользователя есть такая роль')
     @roles.response(int(HTTPStatus.BAD_REQUEST), 'Ошибка проверки входных данных')
-    @roles.response(int(HTTPStatus.NOT_FOUND), 'Роль или пользователь не существует')
-    @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера')
     @admin_required()
     def get(self):
         """Проверка наличия роли у пользователя"""
@@ -115,8 +116,6 @@ class RolesAssign(InjectResource):
     @roles.expect(role_assign, validate=True)
     @roles.response(int(HTTPStatus.OK), 'Роль назначена')
     @roles.response(int(HTTPStatus.BAD_REQUEST), 'Ошибка проверки входных данных')
-    @roles.response(int(HTTPStatus.NOT_FOUND), 'Роль или пользователь не существует')
-    @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера')
     @admin_required()
     def post(self):
         """Добавление пользователю роли"""
@@ -126,10 +125,9 @@ class RolesAssign(InjectResource):
 
         return 'Роль назначена', HTTPStatus.OK
 
+    @roles.expect(role_assign, validate=True)
     @roles.response(int(HTTPStatus.OK), 'Роль для данного пользователя удалена')
     @roles.response(int(HTTPStatus.BAD_REQUEST), 'Ошибка проверки входных данных')
-    @roles.response(int(HTTPStatus.NOT_FOUND), 'Роль или пользователь не существует')
-    @roles.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Внутренняя ошибка сервера')
     @admin_required()
     def delete(self):
         """Удаление роли у пользователя"""
