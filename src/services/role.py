@@ -1,3 +1,4 @@
+import logging
 from functools import lru_cache
 from uuid import UUID
 from typing import Type
@@ -6,6 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 from models.role import Role, RoleSchema
 from models.user import User
+
+logger = logging.getLogger(__name__)
 
 
 class RoleService:
@@ -47,15 +50,18 @@ class RoleService:
 
         :param name: Название новой роли
         :param description: Описание новой роли
-        :return: None - если указанной роли не существует
+        :return: None - если указанная роль существует
                  или объект RoleSchema новой роли
         """
         if self._get_by_name(name):
+            logger.debug(f'Роль <{name}> уже существует')
             return None
 
         role = self.model_role(name=name, description=description)
         self.db.session.add(role)
         self.db.session.commit()
+
+        logger.debug(f'Роль <{name}> создана')
 
         return self.model_role_schema().dump(role)
 
@@ -69,10 +75,13 @@ class RoleService:
         """
         role = self._get_by_id(role_id)
         if not role:
+            logger.debug(f'Роль <{role_id}> не существует')
             return None
 
         self.db.session.delete(role)
         self.db.session.commit()
+
+        logger.debug(f'Роль <{role_id}> удалена')
 
         return True
 
@@ -88,11 +97,13 @@ class RoleService:
         """
         role = self._get_by_id(role_id)
         if not role:
+            logger.debug(f'Роль <{role_id}> не существует')
             return None
 
         if 'name' in payload:
             other_role = self._get_by_name(payload['name'])
             if other_role and other_role.id != role.id:
+                logger.debug(f'Роль с названием <{payload["name"]}> уже существует')
                 return False
 
         for key, value in payload.items():
@@ -100,30 +111,38 @@ class RoleService:
 
         self.db.session.commit()
 
+        logger.debug(f'Роль <{payload["name"]}> обновлена')
+
         return True
 
     def assign_role(self, user_id: UUID, role_id: UUID):
         role = self._get_by_id(role_id)
         if not role:
+            logger.debug(f'Роль <{role_id}> не найдена')
             return None
 
         user = User.query.filter_by(id=user_id).one_or_none()
         if not user:
+            logger.debug(f'Пользователь <{user_id}> не найден')
             return None
 
         user.roles.append(role)
         self.db.session.add(user)
         self.db.session.commit()
 
+        logger.debug(f'Роль <{role_id}> назначена пользователю <{user_id}>')
+
         return True
 
     def get_assigned_role(self, user_id: UUID, role_id: UUID):
         role = self._get_by_id(role_id)
         if not role:
+            logger.debug(f'Роль <{role_id}> не найдена')
             return None
 
         user = User.query.filter_by(id=user_id).one_or_none()
         if not user:
+            logger.debug(f'Пользователь <{user_id}> не найден')
             return None
 
         return role in user.roles
@@ -131,14 +150,18 @@ class RoleService:
     def delete_assigned_role(self, user_id: UUID, role_id: UUID):
         role = self._get_by_id(role_id)
         if not role:
+            logger.debug(f'Роль <{role_id}> не найдена')
             return None
 
         user = User.query.filter_by(id=user_id).one_or_none()
         if not user:
+            logger.debug(f'Пользователь <{user_id}> не найден')
             return None
 
         user.roles.remove(role)
         self.db.session.commit()
+
+        logger.debug(f'Роль <{role_id}> удалена у пользователя <{user_id}>')
 
         return True
 

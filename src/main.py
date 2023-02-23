@@ -1,3 +1,5 @@
+import logging
+
 from flask import Flask
 from flask_injector import FlaskInjector
 from flask_jwt_extended import JWTManager
@@ -9,6 +11,9 @@ from models.role import Role, RoleSchema
 from models.user import User
 from services.role import RoleService, get_role_service
 from services.user import UserService, get_user_service
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=Config.LOGGING_LEVEL)
+logger = logging.getLogger(__name__)
 
 migrate = Migrate()
 jwt = JWTManager()
