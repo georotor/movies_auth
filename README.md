@@ -30,6 +30,11 @@ docker exec -it auth flask user --admin admin@example.com
 
 
 ### Тестирование
+
+Для запуска тестов потребуется файл `.env.tests` с переменными окружения:
+```commandline
+cp src/tests/functional/.env.tests.example src/tests/functional/.env.tests
+```
 Тесты запускаются командой:
 ```commandline
 docker-compose -f src/tests/functional/docker-compose.tests.yml up --build
