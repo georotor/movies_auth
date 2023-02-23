@@ -12,7 +12,7 @@ cp .env.db.example .env.db
 docker-compose up -d --build
 ```
 
-После первого запуска необходимо применить миграции для БД, для этого выполните команду:
+После первого запуска необходимо применить миграции БД, для этого выполните команду:
 ```commandline
 docker exec -it auth flask db upgrade
 ```
