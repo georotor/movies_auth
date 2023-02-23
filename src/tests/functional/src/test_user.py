@@ -197,6 +197,7 @@ async def test_user_update_exist_email(make_json_request, user_tokens):
 async def test_user_history(make_json_request, user_tokens):
     response = await make_json_request(
         url=f'/api/v1/user/history',
+        json={"page_number": 1, "page_size": 10},
         auth_token=user_tokens[0]['access']['token'],
         method='GET'
     )
