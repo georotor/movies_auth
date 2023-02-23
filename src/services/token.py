@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -8,6 +9,7 @@ from flask_jwt_extended import (create_access_token, create_refresh_token,
 from config import Config
 from db import rd
 
+logger = logging.getLogger(__name__)
 config = Config()
 
 
@@ -44,6 +46,8 @@ class TokenService:
             ex=config.JWT_REFRESH_TOKEN_EXPIRES
         )
 
+        logger.debug(f'Выданы новая пара токенов для пользователя <{user_id}>')
+
         return access_token, refresh_token
 
     @staticmethod
@@ -55,6 +59,7 @@ class TokenService:
         token = get_jwt()
         rd.set(token["jti"], "", ex=config.JWT_ACCESS_TOKEN_EXPIRES)
         rd.set(token["refresh_jti"], "", ex=config.JWT_REFRESH_TOKEN_EXPIRES)
+        logger.debug(f'Отозваны токены для пользователя <{token["sub"]}>')
 
     @staticmethod
     def refresh():
@@ -67,6 +72,8 @@ class TokenService:
         identity = get_jwt_identity()
         if not TokenService.is_actual(refresh_token=token, user_id=identity):
             raise TokenError('Token authentication failed')
+
+        logger.debug(f'Обновлены токены пользователя <{identity}>')
         return TokenService.create(identity, fresh=False)
 
     @staticmethod
@@ -77,7 +84,10 @@ class TokenService:
         """
         reference = rd.get('refresh_token: {}'.format(user_id))
         if refresh_token["jti"] != reference:
+            logger.info(f'Refresh токен пользователя <{user_id}> неактуален')
             return False
+
+        logger.debug(f'Refresh токен пользователя <{user_id}> актуален')
         return True
 
     @staticmethod
