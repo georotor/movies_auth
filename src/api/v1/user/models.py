@@ -1,6 +1,6 @@
 """ Модели для валидации входных и выходных данных """
 
-from flask_restx import Model, fields, SchemaModel
+from flask_restx import Model, SchemaModel, fields
 
 EMAIL_PATTERN = r'^([A-Za-z0-9]+[.\-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$'
 
@@ -41,6 +41,14 @@ tokens = Model(
     {
         'access': fields.Nested(token),
         'refresh': fields.Nested(token)
+    }
+)
+
+user_history_request = Model(
+    'UserCreate',
+    {
+        'page_number': fields.Integer(required=True, min=1),
+        'page_size': fields.Integer(default=1),
     }
 )
 
