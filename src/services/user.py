@@ -5,16 +5,13 @@ from uuid import UUID
 
 from flask import abort
 from flask_jwt_extended import verify_jwt_in_request, get_jwt
-
 from sqlalchemy import select, insert
 from sqlalchemy.exc import NoResultFound
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import db
 from models.user import User, db, UserHistory
 from schemas.user import LoginSchema, RegistrationSchema, UpdateUserSchema, \
     UserHistorySchema
-from services.token import TokenService
 
 
 class AuthError(Exception):

@@ -143,9 +143,6 @@ class RoleService:
         return True
 
 
-
-
-
 @lru_cache()
 def get_role_service(
         db: SQLAlchemy,

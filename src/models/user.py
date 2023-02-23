@@ -1,12 +1,11 @@
 import uuid
 
-from sqlalchemy import ForeignKey, event
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from db import db
 from utils import utc
-from models.role import Role
 
 
 users_roles = db.Table(
@@ -17,37 +16,6 @@ users_roles = db.Table(
 
 
 class User(db.Model):
-    """Есть разные способы хэширования паролей. Можно делать это на уровне
-    модели БД:
-
-        1) через @property и setter в классе User:
-
-            @property
-            def password(self):
-                return self._password
-
-            @password.setter
-            def password(self, password: str):
-                self._password = generate_password_hash(password)
-
-        2) через перехватывание ивента внешней функцией с @event.listens_for
-
-            @event.listens_for(User.password, 'set', retval=True)
-            def hash_user_password(target, value, oldvalue, initiator):
-                if value != oldvalue:
-                    return generate_password_hash(value)
-                return value
-
-    Я бы предпочел следовать модели MVC - разделить data plane и control plane.
-    В models.py мы описываем таблицы БД, а всю бизнес логику (включая то что и
-    каким образом мы шифруем) мы выносим в services. Если в будущем мы решим
-    заменить алгоритм шифрования или библиотеку - никаких изменений в
-    models.py вносить не придется.
-
-    Аналогично с методом find_by_email - на мой взгляд, ему в ORM не место.
-    Нужно выносить в services.
-
-    """
     __tablename__ = 'users'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
