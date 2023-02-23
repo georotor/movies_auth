@@ -130,6 +130,8 @@ class RoleService:
         self.db.session.add(user)
         self.db.session.commit()
 
+        logger.debug(f'Роль <{role_id}> назначена пользователю <{user_id}>')
+
         return True
 
     def get_assigned_role(self, user_id: UUID, role_id: UUID):
