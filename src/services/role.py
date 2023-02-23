@@ -111,7 +111,7 @@ class RoleService:
 
         self.db.session.commit()
 
-        logger.debug(f'Роль <{payload["name"]}> обновлена')
+        logger.debug(f'Роль <{role_id}> обновлена')
 
         return True
 
