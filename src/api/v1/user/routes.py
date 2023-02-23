@@ -15,10 +15,11 @@ from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restx import Namespace, Resource, abort
 
+from services.token import TokenError, TokenService
 from services.user import AuthError, UserService
-from services.token import TokenService, TokenError
 
-from .models import token, tokens, user_create, user_update, user_history
+from .models import (token, tokens, user_create, user_history,
+                     user_history_request, user_update)
 
 user_service = UserService()
 token_service = TokenService()
@@ -29,6 +30,7 @@ user.models[user_update.name] = user_update
 user.models[token.name] = token
 user.models[tokens.name] = tokens
 user.models[user_history.name] = user_history
+user.models[user_history_request.name] = user_history_request
 
 
 @user.route('/signup')
@@ -185,15 +187,15 @@ class Update(Resource):
 @user.route('/history')
 @user.doc(security='Bearer')
 class History(Resource):
+    @user.expect(user_history_request, validate=True)
     @user.marshal_with(user_history, code=int(HTTPStatus.OK), as_list=True)
     @user.response(int(HTTPStatus.OK), 'User profile updated successfully')
     @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error')
     @jwt_required()
     def get(self):
-        """Список последних действий пользователя.
+        """Список последних действий пользователя с пагинацией.
 
         """
-
         user_id = token_service.get_user_id()
-        history = user_service.login_history(user_id)
+        history = user_service.login_history(user_id, **request.json)
         return history, HTTPStatus.OK
