@@ -18,13 +18,11 @@ services:
       - 6379:6379
     healthcheck:
       test: ["CMD", "redis-cli","ping"]
-
   api:
     build: ../../../.
     image: api-image
     env_file:
       - .env.tests
-    #entrypoint: gunicorn main:app -w 1 -b 0.0.0.0:5000
     entrypoint: flask --app main:app run --host=0.0.0.0
     ports:
       - 5000:5000
@@ -38,9 +36,7 @@ services:
     env_file:
       - .env.tests
     entrypoint: >
-      sh -c "flask db init \
-      && flask db migrate \
-      && flask db upgrade \
+      sh -c "flask db upgrade \
       && flask user --password 123qweasd user@roles.test \
       && flask user --admin --password 123qweasd admin@roles.test \
       && /usr/local/bin/pip3 install -U pip \

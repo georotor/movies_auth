@@ -1,7 +1,5 @@
 Dockerfile
 venv
-migrations
-src/migrations
 .vscode
 __pycache__
 

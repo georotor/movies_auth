@@ -49,6 +49,7 @@ def create_app(config_object):
 
     db.init_app(app)
     ma.init_app(app)
+    rd.init_app(app)
 
     migrate.init_app(app, db)
 
