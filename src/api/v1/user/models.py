@@ -45,7 +45,7 @@ tokens = Model(
 )
 
 user_history_request = Model(
-    'UserCreate',
+    'UserHistoryRequest',
     {
         'page_number': fields.Integer(required=True, min=1),
         'page_size': fields.Integer(default=1),

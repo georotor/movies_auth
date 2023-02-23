@@ -209,6 +209,7 @@ async def test_user_history(make_json_request, user_tokens):
 async def test_user_history_not_auth(make_json_request, user_tokens):
     response = await make_json_request(
         url=f'/api/v1/user/history',
+        json={'page_number': 1},
         method='GET'
     )
 
@@ -266,6 +267,7 @@ async def test_user_logout(make_json_request, user_tokens):
     response = await make_json_request(
         url=f'/api/v1/user/history',
         auth_token=user_tokens[0]['access']['token'],
+        json={'page_number':1},
         method='GET'
     )
 
