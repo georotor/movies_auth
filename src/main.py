@@ -27,6 +27,8 @@ def check_if_token_is_revoked(jwt_header, jwt_payload: dict):
     """
     key = jwt_payload["jti"]
     token_in_redis = rd.get(key)
+    if token_in_redis:
+        logger.info('Токен (type:{}) пользователя <{}> в стоп листе'.format(jwt_payload['type'], jwt_payload['sub']))
     return token_in_redis is not None
 
 

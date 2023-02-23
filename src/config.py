@@ -30,4 +30,4 @@ class Config:
     REDIS_PORT = int(environ.get('REDIS_PORT', 6379))
     REDIS_DECODE_RESPONSES = True
 
-    LOGGING_LEVEL = logging.INFO
+    LOGGING_LEVEL = int(environ.get('LOGGING_LEVEL', logging.DEBUG))
