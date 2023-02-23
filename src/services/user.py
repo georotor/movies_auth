@@ -126,7 +126,7 @@ class UserService:
         """Список 10 последних записей входа. """
         raw_data = db.session.scalars(
             select(UserHistory).where(UserHistory.user_id == user_id).order_by(
-                UserHistory.created
+                UserHistory.created.desc()
             ).limit(10)
         ).all()
         history = UserHistorySchema().dump(raw_data, many=True)
