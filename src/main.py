@@ -1,6 +1,6 @@
 import logging
 
-from flask import Flask
+from flask import Flask, request
 from flask_injector import FlaskInjector
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
@@ -77,6 +77,12 @@ def register_blueprints(app):
 
 app = create_app(Config)
 register_blueprints(app)
+
+
+@app.before_request
+def before_request():
+    if not request.headers.get('X-Request-Id'):
+        raise RuntimeError('Missing X-Request-Id')
 
 
 if __name__ == '__main__':
