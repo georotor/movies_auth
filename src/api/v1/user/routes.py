@@ -43,11 +43,11 @@ class SignUp(Resource):
     @user.response(int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.')
     @user.response(int(HTTPStatus.CONFLICT), 'Email is already registered.')
     @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
-    @limiter.limit('1 per second')
+    @limiter.limit('10 per second')
     def post(self):
         """Регистрация пользователя.
         После регистрации пользователь сразу считается аутентифицированным.
-        На эту ручку ставим отдельный лимит @limiter.limit('1 per second').
+        На эту ручку ставим отдельный лимит @limiter.limit('10 per second').
 
         """
         try:
