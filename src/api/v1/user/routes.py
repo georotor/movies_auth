@@ -18,11 +18,14 @@ from flask_restx import Namespace, Resource, abort
 from services.token import TokenError, TokenService
 from services.user import AuthError, UserService
 
+from limiter import get_limiter
+
 from .models import (token, tokens, user_create, user_history,
                      user_history_request, user_update)
 
 user_service = UserService()
 token_service = TokenService()
+limiter = get_limiter()
 
 user = Namespace('user', description='Авторизация пользователей')
 user.models[user_create.name] = user_create
@@ -40,9 +43,11 @@ class SignUp(Resource):
     @user.response(int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.')
     @user.response(int(HTTPStatus.CONFLICT), 'Email is already registered.')
     @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
+    @limiter.limit('1 per second')
     def post(self):
         """Регистрация пользователя.
         После регистрации пользователь сразу считается аутентифицированным.
+        На эту ручку ставим отдельный лимит @limiter.limit('1 per second').
 
         """
         try:
