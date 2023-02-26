@@ -4,6 +4,8 @@ from os import environ
 
 
 class Config:
+    SERVER_NAME = 'oauth.lakiza.ru'
+
     PROPAGATE_EXCEPTIONS = True
 
     SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(
@@ -31,3 +33,11 @@ class Config:
     REDIS_DECODE_RESPONSES = True
 
     LOGGING_LEVEL = int(environ.get('LOGGING_LEVEL', logging.DEBUG))
+
+    SECRET_KEY = environ.get('SECRET_KEY', 'super secret key')
+
+    YANDEX_NAME = 'yandex'
+    YANDEX_AUTHORIZE_URL = 'https://oauth.yandex.ru/authorize'
+    YANDEX_CLIENT_ID = 'f71587727e5e43978e62fd58ee1212e9'
+    YANDEX_CLIENT_SECRET = '91fe86ef7b4c489f995d90fcec8dc138'
+    YANDEX_ACCESS_TOKEN_URL = 'https://oauth.yandex.ru/token'

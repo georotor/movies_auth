@@ -8,6 +8,7 @@ from flask_migrate import Migrate
 from config import Config
 from db import db, ma, rd
 from limiter import get_limiter
+from extensions.oauth import oauth
 from models.role import Role, RoleSchema
 from models.user import User
 from services.role import RoleService, get_role_service
@@ -59,6 +60,9 @@ def create_app(config_object):
     db.init_app(app)
     ma.init_app(app)
     rd.init_app(app)
+
+    oauth.init_app(app)
+
     limiter.init_app(app)
 
     migrate.init_app(app, db)
@@ -83,4 +87,7 @@ register_blueprints(app)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        debug=True
+    )
