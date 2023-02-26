@@ -76,6 +76,13 @@ class UserService:
         return user.id
 
     def registration_social(self, email: str, social_id: str, social_name: str):
+        """
+        Регистрация пользователя с привязкой к внешним сервисам авторизации.
+        :param email: Email нового пользователя
+        :param social_id: Индификатор во внешнем сервисе авторизации
+        :param social_name: Название внешнего сервиса авторизации
+        :return: Объект пользователя
+        """
         user = self.find_user(email)
         if not user:
             user = self.registration({

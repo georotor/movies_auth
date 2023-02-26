@@ -27,7 +27,12 @@ class OAuthService:
                 **settings
             )
 
-    def get_auth_url(self, provider, authorization_endpoint) -> tuple | None:
+    def get_auth_url(self, provider: str, authorization_endpoint: str) -> tuple | None:
+        """
+        Подготовка ссылки для авторизации через внешний сервис
+        :param provider: Название сервиса
+        :param authorization_endpoint: Callback ссылка для сервиса авторизации
+        """
         client = self.oauth.create_client(provider)
         if not client:
             return None
@@ -37,7 +42,15 @@ class OAuthService:
 
         return rv
 
-    def authorize(self, provider):
+    def authorize(self, provider: str):
+        """
+        Авторизация через внешний сервис.
+        Если в системе уже есть пользователь с email'ом авторизующегося, то он будет "подключен" к существующему
+        аккаунту, иначе будет создан новый аккаунт со случайным паролем.
+
+        :param provider: Название сервиса.
+        :return: Объект пользователя.
+        """
         client = self.oauth.create_client(provider)
         if not client:
             return None
@@ -63,6 +76,8 @@ class OAuthService:
 
         if self.user_service.find_social_user(social_id, social_name, user.id):
             return user
+
+        return None
 
 
 @lru_cache()
