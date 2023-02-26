@@ -1,32 +1,42 @@
+from http import HTTPStatus
+
 from flask import url_for, jsonify
+from flask_injector import inject
 from flask_restx import Namespace, Resource, abort
 
-from extensions.oauth import oauth
+from .models import oauth_url
+from services.oauth import OAuthService
 
 ns = Namespace('oauth', description='Внешняя авторизация')
+ns.models[oauth_url.name] = oauth_url
 
 parser = ns.parser()
 parser.add_argument('provider', type=str, required=True, choices=("yandex",))
 
 
+class InjectResource(Resource):
+    @inject
+    def __init__(self, oauth_service: OAuthService, **kwargs):
+        self.oauth_service = oauth_service
+        super().__init__(**kwargs)
+
+
 @ns.route('/login')
 @ns.expect(parser)
-class Login(Resource):
+class Login(InjectResource):
+    @ns.marshal_with(oauth_url, code=int(HTTPStatus.OK))
     def get(self):
         """Получаем ссылку для авторизации во внешнем сервисе"""
         provider = parser.parse_args().get('provider')
-        client = oauth.create_client(provider)
+        client = self.oauth_service.oauth.create_client(provider)
         authorization_endpoint = url_for('api.oauth_authorize', provider=provider, _external=True, _scheme='https')
-        # TODO: поискать нормальный способ получений урла
-        return jsonify({
-            'url': client.authorize_redirect(authorization_endpoint).location
-        })
+        return client.create_authorization_url(authorization_endpoint)
 
 
 @ns.route('/authorize/<provider>')
-class Authorize(Resource):
+class Authorize(InjectResource):
     def get(self, provider):
-        client = oauth.create_client(provider)
+        client = self.oauth_service.oauth.create_client(provider)
         if not client:
             abort(404)
 
