@@ -25,6 +25,16 @@ class OAuthService:
                 **settings
             )
 
+    def get_auth_url(self, provider, authorization_endpoint) -> tuple | None:
+        client = self.oauth.create_client(provider)
+        if not client:
+            return None
+
+        rv = client.create_authorization_url(authorization_endpoint)
+        client.save_authorize_data(redirect_uri=authorization_endpoint, **rv)
+
+        return rv
+
 
 @lru_cache()
 def get_oauth_service(oauth: OAuth) -> OAuthService:

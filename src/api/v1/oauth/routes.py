@@ -28,9 +28,13 @@ class Login(InjectResource):
     def get(self):
         """Получаем ссылку для авторизации во внешнем сервисе"""
         provider = parser.parse_args().get('provider')
-        client = self.oauth_service.oauth.create_client(provider)
         authorization_endpoint = url_for('api.oauth_authorize', provider=provider, _external=True, _scheme='https')
-        return client.create_authorization_url(authorization_endpoint)
+
+        url = self.oauth_service.get_auth_url(provider, authorization_endpoint)
+        if not url:
+            abort(404)
+
+        return url
 
 
 @ns.route('/authorize/<provider>')

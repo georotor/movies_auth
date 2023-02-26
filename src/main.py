@@ -8,7 +8,7 @@ from flask_migrate import Migrate
 from config import Config
 from db import db, ma, rd
 from limiter import get_limiter
-from ext.oauth import oauth
+from exts.oauth import oauth
 from models.role import Role, RoleSchema
 from models.user import User
 from services.role import RoleService, get_role_service
