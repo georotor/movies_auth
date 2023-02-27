@@ -83,7 +83,7 @@ class OAuthService:
         }
 
         email = client.server_metadata['get_email'](data)
-        social_id = client.server_metadata['get_social_id'](data)
+        social_id = str(client.server_metadata['get_social_id'](data))
 
         if email is None:
             raise OAuthError("Email required")
