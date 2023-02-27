@@ -4,7 +4,7 @@ from os import environ
 
 
 class Config:
-    SERVER_NAME = 'oauth.lakiza.ru'
+    SERVER_NAME = environ.get('SERVER_NAME')
 
     PROPAGATE_EXCEPTIONS = True
 
