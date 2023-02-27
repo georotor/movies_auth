@@ -3,7 +3,7 @@ from flask_restx import Api
 
 from .user.routes import user
 from .roles.routes import roles
-
+from .oauth.routes import ns as oauth
 
 api_v1 = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -22,3 +22,4 @@ api = Api(
 
 api.add_namespace(user, path='/user')
 api.add_namespace(roles, path='/roles')
+api.add_namespace(oauth, path='/oauth')
