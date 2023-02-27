@@ -15,7 +15,8 @@ ns.models[oauth_url.name] = oauth_url
 ns.models[tokens.name] = tokens
 
 parser = ns.parser()
-parser.add_argument('provider', type=str, required=True, choices=("yandex", "vk"))
+parser.add_argument('provider', type=str, required=True,
+                    choices=("yandex", "vk", "mail", "ok"))
 
 
 class InjectResource(Resource):
@@ -34,7 +35,8 @@ class Login(InjectResource):
     def get(self):
         """Возвращает ссылку для авторизации во внешнем сервисе"""
         provider = parser.parse_args().get('provider')
-        authorization_endpoint = url_for('api.oauth_authorize', provider=provider, _external=True, _scheme='https')
+        authorization_endpoint = url_for(
+            'api.oauth_authorize', provider=provider, _external=True, _scheme='https')
 
         url = self.oauth_service.get_auth_url(provider, authorization_endpoint)
         if not url:

@@ -6,6 +6,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     expose:
       - 5432
+    ports:
+      - "5432:5432"
     env_file:
       - ./.env.db
     healthcheck:
@@ -17,6 +19,8 @@ services:
     image: redis:7.0.7
     expose:
       - 6379
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 2s
@@ -27,14 +31,15 @@ services:
     build: .
     environment:
       - REDIS_HOST=redis
+      - AUTHLIB_INSECURE_TRANSPORT=true
     env_file:
       - ./.env.db
     expose:
       - 5000
     ports:
       - "5000:5000"
-    volumes:
-      - ./src:/opt/app
+    # volumes:
+    #   - ./src:/opt/app
     entrypoint: gunicorn wsgi_app:app -w 1 --bind 0.0.0.0:5000 --reload --access-logfile -
     restart: always
     depends_on:

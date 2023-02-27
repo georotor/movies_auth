@@ -31,7 +31,27 @@ providers = {
         },
         'get_email': (lambda x: x['token'].get('email')),
         'get_social_id': (lambda x: x['token'].get('user_id'))
-    }
+    },
+    'mail': {
+        'authorize_url': 'https://oauth.mail.ru/login',
+        'access_token_url': 'https://oauth.mail.ru/token',
+        'userinfo_endpoint': 'https://oauth.mail.ru/userinfo',
+        'client_kwargs': {
+            'scope': 'userinfo',
+            'token_placement': 'uri',
+        },
+        'get_email': (lambda x: x['userinfo'].get('email')),
+        'get_social_id': (lambda x: x['userinfo'].get('id'))
+    },
+    'ok': {
+        'authorize_url': 'https://connect.ok.ru/oauth/authorize',
+        'access_token_url': 'https://api.ok.ru/oauth/token.do',
+        'client_kwargs': {
+            'scope': 'VALUABLE_ACCESS;LONG_ACCESS_TOKEN;GET_EMAIL'
+        },
+        'get_email': (lambda x: x['userinfo'].get('email')),
+        'get_social_id': (lambda x: x['userinfo'].get('id'))
+    },
 }
 
 
@@ -70,7 +90,8 @@ class OAuthService:
         :param provider: Название сервиса.
         :return: Объект пользователя.
         """
-        client = self.oauth.create_client(provider)
+        client: self.oauth.oauth2_client_cls = self.oauth.create_client(
+            provider)
         if not client:
             return None
 
@@ -88,7 +109,8 @@ class OAuthService:
         if email is None:
             raise OAuthError("Email required")
 
-        user = self.find_user(email=email, social_id=social_id, social_name=provider)
+        user = self.find_user(
+            email=email, social_id=social_id, social_name=provider)
 
         if not user:
             user = self.user_service.registration_social(
