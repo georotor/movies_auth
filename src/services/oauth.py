@@ -7,11 +7,30 @@ from services.user import UserService
 logger = logging.getLogger(__name__)
 
 
+class OAuthError(Exception):
+    """Исключение для ошибок при аутентификации."""
+
+
 providers = {
     'yandex': {
         'userinfo_endpoint': 'https://login.yandex.ru/info',
         'access_token_url': 'https://oauth.yandex.ru/token',
-        'authorize_url': 'https://oauth.yandex.ru/authorize'
+        'authorize_url': 'https://oauth.yandex.ru/authorize',
+        'get_email': (lambda x: x['userinfo'].get('default_email')),
+        'get_social_id': (lambda x: x['userinfo'].get('id'))
+    },
+    'vk': {
+        'api_base_url': 'https://api.vk.com/method/',
+        'access_token_url': 'https://oauth.vk.com/access_token',
+        'authorize_url': 'https://oauth.vk.com/authorize',
+        'userinfo_endpoint': 'users.get?fields=sex,bdate,screen_name&v=5.131',
+        'client_kwargs': {
+            'token_placement': 'uri',
+            'token_endpoint_auth_method': 'client_secret_post',
+            'scope': 'email'
+        },
+        'get_email': (lambda x: x['token'].get('email')),
+        'get_social_id': (lambda x: x['token'].get('user_id'))
     }
 }
 
@@ -55,16 +74,25 @@ class OAuthService:
         if not client:
             return None
 
-        client.authorize_access_token()
+        token = client.authorize_access_token()
         userinfo = client.userinfo()
 
-        user = self.find_user(
-            email=userinfo['default_email'], social_id=userinfo['id'], social_name=provider
-        )
+        data = {
+            'token': token,
+            'userinfo': userinfo
+        }
+
+        email = client.server_metadata['get_email'](data)
+        social_id = client.server_metadata['get_social_id'](data)
+
+        if email is None:
+            raise OAuthError("Email required")
+
+        user = self.find_user(email=email, social_id=social_id, social_name=provider)
 
         if not user:
             user = self.user_service.registration_social(
-                email=userinfo['default_email'], social_id=userinfo['id'], social_name=provider
+                email=email, social_id=social_id, social_name=provider
             )
 
         return user

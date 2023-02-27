@@ -7,7 +7,7 @@ from flask_restx import Namespace, Resource, abort
 from .models import oauth_url
 from api.v1.user.models import tokens
 from services.user import UserService
-from services.oauth import OAuthService
+from services.oauth import OAuthService, OAuthError
 from services.token import TokenService
 
 ns = Namespace('oauth', description='Внешняя авторизация')
@@ -15,7 +15,7 @@ ns.models[oauth_url.name] = oauth_url
 ns.models[tokens.name] = tokens
 
 parser = ns.parser()
-parser.add_argument('provider', type=str, required=True, choices=("yandex",))
+parser.add_argument('provider', type=str, required=True, choices=("yandex", "vk"))
 
 
 class InjectResource(Resource):
@@ -47,7 +47,12 @@ class Login(InjectResource):
 class Authorize(InjectResource):
     @ns.marshal_with(tokens, code=int(HTTPStatus.OK))
     def get(self, provider):
-        user = self.oauth_service.authorize(provider)
+        user = None
+        try:
+            user = self.oauth_service.authorize(provider)
+        except OAuthError:
+            abort(HTTPStatus.UNAUTHORIZED, 'Email required.')
+
         if user is None:
             abort(404)
 

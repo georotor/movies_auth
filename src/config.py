@@ -4,7 +4,7 @@ from os import environ
 
 
 class Config:
-    SERVER_NAME = 'oauth.lakiza.ru'
+    SERVER_NAME = environ.get('SERVER_NAME')
 
     PROPAGATE_EXCEPTIONS = True
 
@@ -38,3 +38,6 @@ class Config:
 
     YANDEX_CLIENT_ID = 'f71587727e5e43978e62fd58ee1212e9'
     YANDEX_CLIENT_SECRET = '91fe86ef7b4c489f995d90fcec8dc138'
+
+    VK_CLIENT_ID = '51566471'
+    VK_CLIENT_SECRET = 'RVyc9VqbVvDxkDiHgiOp'
