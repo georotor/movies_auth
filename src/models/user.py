@@ -1,11 +1,13 @@
+from datetime import datetime
 import uuid
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint, DDL,event
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from db import db
 from utils import utc
+from utils.sql import USER_HISTORY_PARTITION_SQL
 
 
 users_roles = db.Table(
@@ -38,13 +40,34 @@ class User(db.Model):
 
 
 class UserHistory(db.Model):
-    __tablename__ = 'user_history'
+    """При использовании Flask-Migrate не срабатывают тригеры event.listen:
+    https://github.com/miguelgrinberg/Flask-Migrate/issues/344
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    Секция (partitions) для таблицы UserHistory будет автоматически создаваться
+    только при замене flask db upgrade на запуск db.create_all() из shell.
+
+    Альтернатива - консольная команда @shell.cli.command('init_db')
+
+    """
+    __tablename__ = 'user_history'
+    __table_args__ = (
+        UniqueConstraint("id", "created"),
+        {
+            "postgresql_partition_by": "RANGE (created)",
+            "listeners": [(
+                "after_create",
+                DDL(USER_HISTORY_PARTITION_SQL.format(
+                    utc().year, utc().year, utc().year + 1
+                ))
+            )],
+        },
+    )
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey(User.id), nullable=False)
     action = db.Column(db.String(100), nullable=False)
     user_agent = db.Column(db.String(255), nullable=False)
-    created = db.Column(db.DateTime, nullable=False, default=utc())
+    created = db.Column(db.DateTime, primary_key=True, nullable=False, default=utc())
 
 
 class SocialAccount(db.Model):
