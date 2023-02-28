@@ -1,0 +1,4 @@
+USER_HISTORY_PARTITION_SQL = """CREATE TABLE IF NOT EXISTS "user_history_{}" 
+PARTITION OF "user_history" 
+FOR VALUES FROM ('{}-01-01') TO ('{}-01-01');"""
+
