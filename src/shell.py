@@ -1,10 +1,10 @@
 import click
 from flask import Blueprint
+from sqlalchemy.sql import text
 from werkzeug.security import generate_password_hash
 
 from models.user import User, db
 from utils.sql import USER_HISTORY_PARTITION_SQL
-from sqlalchemy.sql import text
 
 shell = Blueprint('shell', __name__, cli_group=None)
 

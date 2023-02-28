@@ -1,14 +1,12 @@
-from datetime import datetime
 import uuid
 
-from sqlalchemy import ForeignKey, UniqueConstraint, DDL,event
+from sqlalchemy import DDL, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from db import db
 from utils import utc
 from utils.sql import USER_HISTORY_PARTITION_SQL
-
 
 users_roles = db.Table(
     'users_roles',
