@@ -2,15 +2,14 @@ import logging
 
 from flask import Flask
 from flask_injector import FlaskInjector
-from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 
 from config import Config
 from db import db, ma, rd
 from limiter import get_limiter
+from exts.jwt import jwt
 from exts.oauth import oauth
 from models.role import Role, RoleSchema
-from models.user import User
 from services.role import RoleService, get_role_service
 from services.user import UserService, get_user_service
 from services.oauth import OAuthService, get_oauth_service
@@ -20,34 +19,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 migrate = Migrate()
-jwt = JWTManager()
 limiter = get_limiter()
-
-
-@jwt.token_in_blocklist_loader
-def check_if_token_is_revoked(jwt_header, jwt_payload: dict):
-    """Callback, используется flask-jwt-extended для проверки статуса токена.
-    https://flask-jwt-extended.readthedocs.io/en/stable/blocklist_and_token_revoking/#redis
-
-    """
-    key = jwt_payload["jti"]
-    token_in_redis = rd.get(key)
-    if token_in_redis:
-        logger.info('Токен (type:{}) пользователя <{}> в стоп листе'.format(jwt_payload['type'], jwt_payload['sub']))
-    return token_in_redis is not None
-
-
-@jwt.additional_claims_loader
-def add_claims_to_access_token(identity):
-    """Callback, используется при создании токена с дополнительными данными.
-    https://flask-jwt-extended.readthedocs.io/en/latest/add_custom_data_claims/
-
-    В данном случае используем его для хранения флага is_admin, теоретически
-    сюда можно положить список всех ролей пользователя.
-
-    """
-    user = User.query.filter_by(id=identity).one_or_none()
-    return {'is_admin': user.is_admin}
 
 
 def configure(binder):

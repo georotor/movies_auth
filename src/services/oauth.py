@@ -90,8 +90,7 @@ class OAuthService:
         :param provider: Название сервиса.
         :return: Объект пользователя.
         """
-        client: self.oauth.oauth2_client_cls = self.oauth.create_client(
-            provider)
+        client = self.oauth.oauth2_client_cls = self.oauth.create_client(provider)
         if not client:
             return None
 
@@ -109,8 +108,7 @@ class OAuthService:
         if email is None:
             raise OAuthError("Email required")
 
-        user = self.find_user(
-            email=email, social_id=social_id, social_name=provider)
+        user = self.find_user(email=email, social_id=social_id, social_name=provider)
 
         if not user:
             user = self.user_service.registration_social(
