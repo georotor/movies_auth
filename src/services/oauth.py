@@ -2,6 +2,7 @@ import logging
 from functools import lru_cache
 
 from authlib.integrations.flask_client import OAuth
+from models.user import User
 from services.user import UserService
 
 logger = logging.getLogger(__name__)
@@ -58,24 +59,15 @@ class OAuthService:
         if email is None:
             raise OAuthError("Email required")
 
-        user = self.find_user(email=email, social_id=social_id, social_name=provider)
-
-        if not user:
-            user = self.user_service.registration_social(
-                email=email, social_id=social_id, social_name=provider
-            )
-
-        return user
-
-    def find_user(self, email: str, social_id: str, social_name: str):
-        user = self.user_service.find_user(email)
-        if not user:
-            return None
-
-        if self.user_service.find_social_user(social_id, social_name, user.id):
+        user = self.user_service.find_user_by_social(social_id=social_id, social_name=provider)
+        if user:
             return user
 
-        return None
+        user = self.user_service.registration_social(
+            email=email, social_id=social_id, social_name=provider
+        )
+
+        return user
 
 
 @lru_cache()
