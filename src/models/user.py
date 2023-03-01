@@ -58,7 +58,7 @@ class SocialAccount(db.Model):
     social_name = db.Column(db.String(50), nullable=False)
 
     __table_args__ = (db.UniqueConstraint('social_id', 'social_name', name='social_pk'),
-                      )
+                      db.UniqueConstraint('user_id', 'social_name', name='social_user'))
 
     def __repr__(self):
         return f'<SocialAccount {self.social_name}:{self.user_id}>'
