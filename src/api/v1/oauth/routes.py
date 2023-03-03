@@ -28,51 +28,6 @@ class InjectResource(Resource):
         super().__init__(**kwargs)
 
 
-# @ns.route('/attach/<provider>')
-# @ns.doc(security='Bearer')
-# @ns.expect(parser)
-# class Attach(InjectResource):
-#     @ns.marshal_with(oauth_url, code=int(HTTPStatus.OK))
-#     @jwt_required()
-#     def post(self):
-#         """Возвращает ссылку для авторизации во внешнем сервисе"""
-#         @after_this_request
-#         def set_cookie(response):
-#             token = request.headers["Authorization"].split(" ")[1]
-#             set_access_cookies(response, token)
-#             return response
-#
-#         provider = parser.parse_args().get('provider')
-#         authorization_endpoint = url_for(
-#             'api.oauth_attach', provider=provider, _external=True, _scheme='https')
-#
-#         url = self.oauth_service.get_auth_url(provider, authorization_endpoint)
-#         if not url:
-#             abort(404)
-#
-#         return url
-#
-#     def get(self, provider):
-#         user_id = None
-#         jwt = verify_jwt_in_request(optional=True, locations=("cookies",))
-#         if jwt:
-#             user_id = jwt[1]['sub']
-#
-#         user = None
-#         try:
-#             user = self.oauth_service.authorize(provider)
-#         except OAuthError:
-#             abort(HTTPStatus.UNAUTHORIZED, 'Email required.')
-#
-#         if user is None:
-#             abort(404)
-#
-#         user_agent = request.user_agent.string
-#         self.user_service.remember_login(user.id, user_agent)
-#
-#         return self.token_service.create(user.id, fresh=True)
-
-
 @ns.route('/login/<provider>')
 @ns.expect(parser)
 class Login(InjectResource):
