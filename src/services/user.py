@@ -31,7 +31,7 @@ class UserService:
 
     @staticmethod
     def find_user_by_social(social_id: str, social_name: str) -> Optional[SocialAccount]:
-        """Проверяем наличие пользователя."""
+        """Проверяем наличие пользователя с привязанным соц аккаунтом."""
         try:
             return db.session.scalars(
                 select(User)
@@ -90,6 +90,7 @@ class UserService:
                 'email': email,
                 'password': secrets.token_urlsafe(13)
             })
+            logger.info(f'Создан <{user.id}> для <{social_id}> из <{social_name}>')
 
         db.session.execute(
             insert(SocialAccount).values(
@@ -100,9 +101,7 @@ class UserService:
         )
         db.session.commit()
 
-        logger.debug('Зарегистрирован пользователь <{}> из сети <{}>'.format(
-            social_id, social_name
-        ))
+        logger.debug(f'Зарегистрирован <{social_id}> из <{social_name}>')
 
         return user
 

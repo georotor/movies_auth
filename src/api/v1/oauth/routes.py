@@ -16,7 +16,7 @@ ns.models[tokens.name] = tokens
 
 parser = ns.parser()
 parser.add_argument('provider', type=str, required=True,
-                    choices=("yandex", "vk", "mail", "ok"))
+                    choices=("yandex", "vk", "mail", "google"))
 
 
 class InjectResource(Resource):
@@ -28,37 +28,82 @@ class InjectResource(Resource):
         super().__init__(**kwargs)
 
 
-@ns.route('/login')
+# @ns.route('/attach/<provider>')
+# @ns.doc(security='Bearer')
+# @ns.expect(parser)
+# class Attach(InjectResource):
+#     @ns.marshal_with(oauth_url, code=int(HTTPStatus.OK))
+#     @jwt_required()
+#     def post(self):
+#         """Возвращает ссылку для авторизации во внешнем сервисе"""
+#         @after_this_request
+#         def set_cookie(response):
+#             token = request.headers["Authorization"].split(" ")[1]
+#             set_access_cookies(response, token)
+#             return response
+#
+#         provider = parser.parse_args().get('provider')
+#         authorization_endpoint = url_for(
+#             'api.oauth_attach', provider=provider, _external=True, _scheme='https')
+#
+#         url = self.oauth_service.get_auth_url(provider, authorization_endpoint)
+#         if not url:
+#             abort(404)
+#
+#         return url
+#
+#     def get(self, provider):
+#         user_id = None
+#         jwt = verify_jwt_in_request(optional=True, locations=("cookies",))
+#         if jwt:
+#             user_id = jwt[1]['sub']
+#
+#         user = None
+#         try:
+#             user = self.oauth_service.authorize(provider)
+#         except OAuthError:
+#             abort(HTTPStatus.UNAUTHORIZED, 'Email required.')
+#
+#         if user is None:
+#             abort(404)
+#
+#         user_agent = request.user_agent.string
+#         self.user_service.remember_login(user.id, user_agent)
+#
+#         return self.token_service.create(user.id, fresh=True)
+
+
+@ns.route('/login/<provider>')
 @ns.expect(parser)
 class Login(InjectResource):
     @ns.marshal_with(oauth_url, code=int(HTTPStatus.OK))
-    def get(self):
+    @ns.response(int(HTTPStatus.NOT_FOUND), 'Provider not found.')
+    def get(self, provider):
         """Возвращает ссылку для авторизации во внешнем сервисе"""
-        provider = parser.parse_args().get('provider')
         authorization_endpoint = url_for(
             'api.oauth_authorize', provider=provider, _external=True, _scheme='https')
 
         url = self.oauth_service.get_auth_url(provider, authorization_endpoint)
         if not url:
-            abort(404)
+            abort(HTTPStatus.NOT_FOUND, 'Provider not found.')
 
         return url
 
 
 @ns.route('/authorize/<provider>')
+@ns.expect(parser)
 class Authorize(InjectResource):
     @ns.marshal_with(tokens, code=int(HTTPStatus.OK))
+    @ns.response(int(HTTPStatus.UNAUTHORIZED), 'Email required.')
     def get(self, provider):
+        """Callback для авторизации через внешний сервис"""
         user = None
         try:
             user = self.oauth_service.authorize(provider)
         except OAuthError:
             abort(HTTPStatus.UNAUTHORIZED, 'Email required.')
 
-        if user is None:
-            abort(404)
-
         user_agent = request.user_agent.string
-        self.user_service.remember_login(user.id, user_agent)
+        self.user_service.remember_login(user.id, user_agent, action=f'login via {provider}')
 
         return self.token_service.create(user.id, fresh=True)

@@ -34,15 +34,16 @@ providers = {
         'get_email': (lambda x: x['userinfo'].get('email')),
         'get_social_id': (lambda x: x['userinfo'].get('id'))
     },
-    'ok': {
-        'authorize_url': 'https://connect.ok.ru/oauth/authorize',
-        'access_token_url': 'https://api.ok.ru/oauth/token.do',
+    'google': {
+        'access_token_url': 'https://oauth2.googleapis.com/token',
+        'authorize_url': 'https://accounts.google.com/o/oauth2/v2/auth',
+        'server_metadata_url': 'https://accounts.google.com/.well-known/openid-configuration',
         'client_kwargs': {
-            'scope': 'VALUABLE_ACCESS;LONG_ACCESS_TOKEN;GET_EMAIL'
+            'scope': 'openid email profile'
         },
         'get_email': (lambda x: x['userinfo'].get('email')),
-        'get_social_id': (lambda x: x['userinfo'].get('id'))
-    },
+        'get_social_id': (lambda x: x['userinfo'].get('sub'))
+    }
 }
 
 for provider, settings in providers.items():

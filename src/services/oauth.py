@@ -2,7 +2,6 @@ import logging
 from functools import lru_cache
 
 from authlib.integrations.flask_client import OAuth
-from models.user import User
 from services.user import UserService
 
 logger = logging.getLogger(__name__)
@@ -41,9 +40,7 @@ class OAuthService:
         :param provider: Название сервиса.
         :return: Объект пользователя.
         """
-        client = self.oauth.oauth2_client_cls = self.oauth.create_client(provider)
-        if not client:
-            return None
+        client = self.oauth.create_client(provider)
 
         token = client.authorize_access_token()
         userinfo = client.userinfo()
@@ -57,10 +54,12 @@ class OAuthService:
         social_id = str(client.server_metadata['get_social_id'](data))
 
         if email is None:
+            logger.info(f'Email не найден для пользователя <{social_id}> из <{provider}>')
             raise OAuthError("Email required")
 
         user = self.user_service.find_user_by_social(social_id=social_id, social_name=provider)
         if user:
+            logger.debug(f'Загружен <{user.id}> из <{provider}>')
             return user
 
         user = self.user_service.registration_social(
