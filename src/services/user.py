@@ -30,21 +30,22 @@ class UserService:
     """
 
     @staticmethod
-    def find_social_user(social_id: str, social_name: str, user_id: UUID) -> Optional[SocialAccount]:
-        """Проверяем наличие пользователя."""
+    def find_user_by_social(social_id: str, social_name: str) -> Optional[SocialAccount]:
+        """Проверяем наличие пользователя с привязанным соц аккаунтом."""
         try:
             return db.session.scalars(
-                select(SocialAccount).where(
+                select(User)
+                .join(SocialAccount.user)
+                .where(
                     SocialAccount.social_id == social_id,
-                    SocialAccount.social_name == social_name,
-                    SocialAccount.user_id == user_id
+                    SocialAccount.social_name == social_name
                 )
             ).one()
         except NoResultFound:
-            logger.debug('Не найден пользователь social_id: {}, social_name: {}, user_id:{}'.format(
-                social_id, social_name, user_id
+            logger.debug('Не найден пользователь social_id: {}, social_name: {}'.format(
+                social_id, social_name
             ))
-            return
+            return None
 
     @staticmethod
     def find_user(email: str) -> Optional[User]:
@@ -89,6 +90,7 @@ class UserService:
                 'email': email,
                 'password': secrets.token_urlsafe(13)
             })
+            logger.info(f'Создан <{user.id}> для <{social_id}> из <{social_name}>')
 
         db.session.execute(
             insert(SocialAccount).values(
@@ -99,9 +101,7 @@ class UserService:
         )
         db.session.commit()
 
-        logger.debug('Зарегистрирован пользователь <{}> из сети <{}>'.format(
-            social_id, social_name
-        ))
+        logger.debug(f'Зарегистрирован <{social_id}> из <{social_name}>')
 
         return user
 

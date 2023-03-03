@@ -40,9 +40,7 @@ class OAuthService:
         :param provider: Название сервиса.
         :return: Объект пользователя.
         """
-        client = self.oauth.oauth2_client_cls = self.oauth.create_client(provider)
-        if not client:
-            return None
+        client = self.oauth.create_client(provider)
 
         token = client.authorize_access_token()
         userinfo = client.userinfo()
@@ -56,26 +54,19 @@ class OAuthService:
         social_id = str(client.server_metadata['get_social_id'](data))
 
         if email is None:
+            logger.info(f'Email не найден для пользователя <{social_id}> из <{provider}>')
             raise OAuthError("Email required")
 
-        user = self.find_user(email=email, social_id=social_id, social_name=provider)
-
-        if not user:
-            user = self.user_service.registration_social(
-                email=email, social_id=social_id, social_name=provider
-            )
-
-        return user
-
-    def find_user(self, email: str, social_id: str, social_name: str):
-        user = self.user_service.find_user(email)
-        if not user:
-            return None
-
-        if self.user_service.find_social_user(social_id, social_name, user.id):
+        user = self.user_service.find_user_by_social(social_id=social_id, social_name=provider)
+        if user:
+            logger.debug(f'Загружен <{user.id}> из <{provider}>')
             return user
 
-        return None
+        user = self.user_service.registration_social(
+            email=email, social_id=social_id, social_name=provider
+        )
+
+        return user
 
 
 @lru_cache()
