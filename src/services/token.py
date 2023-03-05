@@ -108,6 +108,12 @@ class TokenService:
     def get_user_id():
         return get_jwt_identity()
 
+    @staticmethod
+    def get_user_roles():
+        token = get_jwt()
+        return token.get('roles', [])
+
+
 
 @lru_cache()
 def get_token_service() -> TokenService:
