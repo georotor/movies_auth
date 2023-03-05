@@ -169,3 +169,14 @@ class History(Resource):
         user_id = token_service.get_user_id()
         history = user_service.login_history(user_id, **request.json)
         return history, HTTPStatus.OK
+
+
+@user.route('/is_authenticated')
+@user.doc(security='Bearer')
+class IsAuthenticated(Resource):
+    @user.response(int(HTTPStatus.OK), 'User is authenticated')
+    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error')
+    @jwt_required()
+    def get(self):
+        """Проверка наличия и валидности токена. """
+        return 'User is authenticated', HTTPStatus.OK
