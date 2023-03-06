@@ -72,6 +72,16 @@ def run_migrations_offline():
         context.run_migrations()
 
 
+def include_object(object, name, type_, reflected, compare_to) -> bool:
+    """
+    https://alembic.sqlalchemy.org/en/latest/autogenerate.html#omitting-based-on-object
+    """
+
+    if type_ == "table" and object.name.startswith('user_history'):
+        return False
+    return True
+
+
 def run_migrations_online():
     """Run migrations in 'online' mode.
 
@@ -97,6 +107,7 @@ def run_migrations_online():
             connection=connection,
             target_metadata=get_metadata(),
             process_revision_directives=process_revision_directives,
+            include_object=include_object,
             **current_app.extensions['migrate'].configure_args
         )
 

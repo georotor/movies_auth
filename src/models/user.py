@@ -1,12 +1,11 @@
 import uuid
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from db import db
 from utils import utc
-
 
 users_roles = db.Table(
     'users_roles',
@@ -37,14 +36,35 @@ class User(db.Model):
         return f'<User {self.email}>'
 
 
-class UserHistory(db.Model):
-    __tablename__ = 'user_history'
+def userhistory_partitions(ddl, target, connection, **kwargs):
+    for i in range(0, 5):
+        year = utc().year + i
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS "user_history_{}" 
+                PARTITION OF "user_history" 
+                FOR VALUES FROM ('{}-01-01') TO ('{}-01-01');""".format(year, year, year + 1)
+        )
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+
+class UserHistory(db.Model):
+    """При использовании Flask-Migrate не срабатывают тригеры event.listen:
+    https://github.com/miguelgrinberg/Flask-Migrate/issues/344
+
+    """
+    __tablename__ = 'user_history'
+    __table_args__ = (
+        UniqueConstraint("id", "created"),
+        {
+            "postgresql_partition_by": "RANGE (created)",
+            "listeners": [("after_create", userhistory_partitions)],
+        },
+    )
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey(User.id), nullable=False)
     action = db.Column(db.String(100), nullable=False)
     user_agent = db.Column(db.String(255), nullable=False)
-    created = db.Column(db.DateTime, nullable=False, default=utc())
+    created = db.Column(db.DateTime, primary_key=True, nullable=False, default=utc())
 
 
 class SocialAccount(db.Model):
