@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 
 from config import Config
 from db import db, ma, rd
+from exts.jaeger import get_jaeger
 from models.role import Role, RoleSchema
 from models.user import User
 from services.role import RoleService, get_role_service
@@ -57,6 +58,7 @@ def create_app(config_object):
     db.init_app(app)
     ma.init_app(app)
     rd.init_app(app)
+    get_jaeger(app)
 
     migrate.init_app(app, db)
 
