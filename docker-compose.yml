@@ -26,6 +26,7 @@ services:
     container_name: auth
     build: .
     environment:
+      - JAEGER_HOST=jaeger
       - REDIS_HOST=redis
     env_file:
       - ./.env.db
@@ -45,5 +46,11 @@ services:
       - 80:80
     depends_on:
       - auth
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - 16686:16686
+    expose:
+      - 6831/udp
 volumes:
   postgres_data:
