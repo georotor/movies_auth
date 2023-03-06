@@ -15,10 +15,9 @@ from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restx import Namespace, Resource, abort, fields
 
+from exts.limiter import get_limiter
 from services.token import TokenError, TokenService
 from services.user import AuthError, UserService
-
-from limiter import get_limiter
 
 from .models import (token, tokens, user_create, user_history,
                      user_history_request, user_update)
