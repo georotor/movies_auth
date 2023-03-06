@@ -10,8 +10,7 @@ down:       ## docker-compose down -v
 up:         ## docker-compose up -dV --build
 	docker-compose -f ${COMPOSE} up -dV --build
 
-restart:    ## restart with "down" and "up" commands
-	down up
+restart: down up    ## restart with "down" and "up" commands
 
 ps:         ## docker-compose ps
 	docker-compose -f ${COMPOSE} ps

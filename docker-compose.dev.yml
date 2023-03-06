@@ -4,13 +4,57 @@ services:
     image: postgres:13
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    expose:
+      - 5432
     ports:
-      - 5432:5432
+      - "5432:5432"
     env_file:
       - ./.env.db
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U app -d auth_database'"]
+      interval: 2s
+      timeout: 5s
+      retries: 120
   redis:
     image: redis:7.0.7
+    expose:
+      - 6379
     ports:
-      - 6379:6379
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 120
+  auth:
+    container_name: auth
+    build: .
+    environment:
+      - REDIS_HOST=redis
+      - AUTHLIB_INSECURE_TRANSPORT=true
+    env_file:
+      - ./.env.db
+    expose:
+      - 5000
+    ports:
+      - "5000:5000"
+    # volumes:
+    #   - ./src:/opt/app
+    entrypoint: gunicorn wsgi_app:app -w 1 --bind 0.0.0.0:5000 --reload --access-logfile -
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  nginx:
+    image: nginx:1.23.2
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    ports:
+      - 80:80
+    depends_on:
+      - auth
 volumes:
   postgres_data:

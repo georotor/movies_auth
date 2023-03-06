@@ -18,11 +18,14 @@ from flask_restx import Namespace, Resource, abort
 from services.token import TokenError, TokenService
 from services.user import AuthError, UserService
 
+from limiter import get_limiter
+
 from .models import (token, tokens, user_create, user_history,
                      user_history_request, user_update)
 
 user_service = UserService()
 token_service = TokenService()
+limiter = get_limiter()
 
 user = Namespace('user', description='Авторизация пользователей')
 user.models[user_create.name] = user_create
@@ -40,32 +43,23 @@ class SignUp(Resource):
     @user.response(int(HTTPStatus.BAD_REQUEST), 'Input payload validation failed.')
     @user.response(int(HTTPStatus.CONFLICT), 'Email is already registered.')
     @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error.')
+    @limiter.limit('10 per second')
     def post(self):
         """Регистрация пользователя.
         После регистрации пользователь сразу считается аутентифицированным.
+        На эту ручку ставим отдельный лимит @limiter.limit('10 per second').
 
         """
         try:
-            user_id = user_service.registration(request.json)
+            user = user_service.registration(request.json)
         except AuthError:
             abort(HTTPStatus.CONFLICT, 'Email is already registered.')
             return
 
         user_agent = request.user_agent.string
-        user_service.remember_login(user_id, user_agent, action='registration')
+        user_service.remember_login(user.id, user_agent, action='registration')
 
-        access_token, refresh_token = token_service.create(user_id, fresh=True)
-
-        tokens_ = {
-            'access': {
-                'token': access_token,
-                'expired': token_service.expired_at(access_token)
-            },
-            'refresh': {
-                'token': refresh_token,
-                'expired': token_service.expired_at(refresh_token)
-            },
-        }
+        tokens_ = token_service.create(user.id, fresh=True)
 
         return tokens_, HTTPStatus.CREATED
 
@@ -90,20 +84,7 @@ class LogIn(Resource):
         user_agent = request.user_agent.string
         user_service.remember_login(user_id, user_agent)
 
-        access_token, refresh_token = token_service.create(user_id, fresh=True)
-
-        tokens_ = {
-            'access': {
-                'token': access_token,
-                'expired': token_service.expired_at(access_token)
-            },
-            'refresh': {
-                'token': refresh_token,
-                'expired': token_service.expired_at(refresh_token)
-            },
-        }
-
-        return tokens_
+        return token_service.create(user_id, fresh=True)
 
 
 @user.route('/logout')
@@ -136,21 +117,10 @@ class Refresh(Resource):
 
         """
         try:
-            access_token, refresh_token = token_service.refresh()
+            tokens_ = token_service.refresh()
         except TokenError:
             abort(HTTPStatus.UNAUTHORIZED, 'Token authentication failed.')
             return
-
-        tokens_ = {
-            'access': {
-                'token': access_token,
-                'expired': token_service.expired_at(access_token)
-            },
-            'refresh': {
-                'token': refresh_token,
-                'expired': token_service.expired_at(refresh_token)
-            },
-        }
 
         return tokens_, HTTPStatus.CREATED
 

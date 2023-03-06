@@ -4,6 +4,8 @@ from os import environ
 
 
 class Config:
+    SERVER_NAME = environ.get('SERVER_NAME')
+
     PROPAGATE_EXCEPTIONS = True
 
     SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(
@@ -35,3 +37,17 @@ class Config:
     JAEGER_HOST = environ.get('JAEGER_HOST', 'localhost')
 
     LOGGING_LEVEL = int(environ.get('LOGGING_LEVEL', logging.DEBUG))
+
+    SECRET_KEY = environ.get('SECRET_KEY', 'super secret key')
+
+    YANDEX_CLIENT_ID = environ.get('YANDEX_CLIENT_ID')
+    YANDEX_CLIENT_SECRET = environ.get('YANDEX_CLIENT_SECRET')
+
+    VK_CLIENT_ID = environ.get('VK_CLIENT_ID')
+    VK_CLIENT_SECRET = environ.get('VK_CLIENT_SECRET')
+
+    MAIL_CLIENT_ID = environ.get('MAIL_CLIENT_ID')
+    MAIL_CLIENT_SECRET = environ.get('MAIL_CLIENT_SECRET')
+
+    GOOGLE_CLIENT_ID = environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = environ.get('GOOGLE_CLIENT_SECRET')

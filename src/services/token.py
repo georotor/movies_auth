@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from functools import lru_cache
 from uuid import UUID
 
 from flask_jwt_extended import (create_access_token, create_refresh_token,
@@ -48,7 +49,16 @@ class TokenService:
 
         logger.debug(f'Выданы новая пара токенов для пользователя <{user_id}>')
 
-        return access_token, refresh_token
+        return {
+            'access': {
+                'token': access_token,
+                'expired': TokenService.expired_at(access_token)
+            },
+            'refresh': {
+                'token': refresh_token,
+                'expired': TokenService.expired_at(refresh_token)
+            },
+        }
 
     @staticmethod
     def delete():
@@ -97,3 +107,8 @@ class TokenService:
     @staticmethod
     def get_user_id():
         return get_jwt_identity()
+
+
+@lru_cache()
+def get_token_service() -> TokenService:
+    return TokenService()

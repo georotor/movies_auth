@@ -1,6 +1,7 @@
 from functools import lru_cache, wraps
 from http import HTTPStatus
 import logging
+import secrets
 from typing import Optional
 from uuid import UUID
 
@@ -10,7 +11,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.exc import NoResultFound
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from models.user import User, UserHistory, db
+from models.user import User, UserHistory, SocialAccount, db
 from schemas.user import (LoginSchema, RegistrationSchema, UpdateUserSchema,
                           UserHistorySchema)
 
@@ -27,6 +28,24 @@ class UserService:
     в один класс просто для удобства.
 
     """
+
+    @staticmethod
+    def find_user_by_social(social_id: str, social_name: str) -> Optional[SocialAccount]:
+        """Проверяем наличие пользователя с привязанным соц аккаунтом."""
+        try:
+            return db.session.scalars(
+                select(User)
+                .join(SocialAccount.user)
+                .where(
+                    SocialAccount.social_id == social_id,
+                    SocialAccount.social_name == social_name
+                )
+            ).one()
+        except NoResultFound:
+            logger.debug('Не найден пользователь social_id: {}, social_name: {}'.format(
+                social_id, social_name
+            ))
+            return None
 
     @staticmethod
     def find_user(email: str) -> Optional[User]:
@@ -57,6 +76,35 @@ class UserService:
         logger.info('Успешная аутентификация <{}>'.format(user.id))
         return user.id
 
+    def registration_social(self, email: str, social_id: str, social_name: str):
+        """
+        Регистрация пользователя с привязкой к внешним сервисам авторизации.
+        :param email: Email нового пользователя
+        :param social_id: Индификатор во внешнем сервисе авторизации
+        :param social_name: Название внешнего сервиса авторизации
+        :return: Объект пользователя
+        """
+        user = self.find_user(email)
+        if not user:
+            user = self.registration({
+                'email': email,
+                'password': secrets.token_urlsafe(13)
+            })
+            logger.info(f'Создан <{user.id}> для <{social_id}> из <{social_name}>')
+
+        db.session.execute(
+            insert(SocialAccount).values(
+                user_id=user.id,
+                social_id=social_id,
+                social_name=social_name
+            )
+        )
+        db.session.commit()
+
+        logger.debug(f'Зарегистрирован <{social_id}> из <{social_name}>')
+
+        return user
+
     @staticmethod
     def registration(data: dict):
         """Регистрация пользователя. Валидация данных (включая требования к
@@ -86,7 +134,7 @@ class UserService:
         logger.debug('Регистрация нового пользователя <{}>'.format(
             user.id
         ))
-        return user.id
+        return user
 
     @staticmethod
     def update_user(data):
