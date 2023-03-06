@@ -1,13 +1,21 @@
-# Проектная работа 6 спринта
+# Проектная работа 6 и 7 спринта
 
-Репозиторий с Auth API: https://github.com/georotor/Auth_sprint_1
+Репозитории:
+- Auth API: https://github.com/georotor/Auth_sprint_1
+- Async API: https://github.com/georotor/Async_API_sprint_1
+
 
 Для запуска потребуется файл `.env.db` с переменными окружения для Postgresql:
 ```commandline
 cp .env.db.example .env.db
 ```
 
-Запуск сервиса осуществляется командой:
+и `.env.oauth` с данными для авторизации через сторонние сервисы:
+```commandline
+cp .env.oauth.example .env.oauth
+```
+
+Запуск Auth сервиса осуществляется командой:
 ```commandline
 docker-compose up -d --build
 ```
@@ -21,6 +29,9 @@ docker exec -it auth flask db upgrade
 ```commandline
 docker exec -it auth flask user --admin admin@example.com
 ```
+
+## Трассировка
+Так же после запуска доступен Jaeger: http://localhost:16686
 
 ## Документация
 [Общая схема сервиса](https://github.com/georotor/Auth_sprint_1/blob/main/docs/Auth%20API.pdf).

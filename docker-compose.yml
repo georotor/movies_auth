@@ -30,6 +30,7 @@ services:
       - REDIS_HOST=redis
     env_file:
       - ./.env.db
+      - ./.env.oauth
     expose:
       - 5000
     depends_on:
