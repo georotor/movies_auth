@@ -13,7 +13,7 @@ from http import HTTPStatus
 
 from flask import request
 from flask_jwt_extended import jwt_required
-from flask_restx import Namespace, Resource, abort
+from flask_restx import Namespace, Resource, abort, fields
 
 from services.token import TokenError, TokenService
 from services.user import AuthError, UserService
@@ -169,3 +169,19 @@ class History(Resource):
         user_id = token_service.get_user_id()
         history = user_service.login_history(user_id, **request.json)
         return history, HTTPStatus.OK
+
+
+@user.route('/is_authenticated')
+@user.doc(security='Bearer')
+class IsAuthenticated(Resource):
+    @user.response(
+        int(HTTPStatus.OK),
+        'User is authenticated',
+        fields.List(fields.String())
+    )
+    @user.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), 'Internal server error')
+    @jwt_required()
+    def get(self):
+        """Проверка токена, получение списка ролей."""
+        roles = token_service.get_user_roles()
+        return roles, HTTPStatus.OK

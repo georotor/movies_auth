@@ -27,9 +27,13 @@ def add_claims_to_access_token(identity):
     """Callback, используется при создании токена с дополнительными данными.
     https://flask-jwt-extended.readthedocs.io/en/latest/add_custom_data_claims/
 
-    В данном случае используем его для хранения флага is_admin, теоретически
-    сюда можно положить список всех ролей пользователя.
+    Флаг is_admin используется для проверки прав доступа к ручкам auth сервиса.
+    В roles храним список ролей пользователя к которому будут обращаться
+    сторонние сервисы. Таким образом мы снижаем нагрузку на сервис (не нужно
+    каждый раз запрашивать список ролей пользователя), но чуть снижаем уровень
+    безопасности (роль нельзя отозвать мгновенно).
 
     """
     user = User.query.filter_by(id=identity).one_or_none()
-    return {'is_admin': user.is_admin}
+    roles = [role.name for role in user.roles]
+    return {'is_admin': user.is_admin, 'roles': roles}
