@@ -1,11 +1,12 @@
 import logging
 
-from flask import Flask
+from flask import Flask, request
 from flask_injector import FlaskInjector
 from flask_migrate import Migrate
 
 from config import Config
 from db import db, ma, rd
+from exts.jaeger import get_jaeger
 from limiter import get_limiter
 from exts.jwt import jwt
 from exts.oauth import oauth
@@ -36,6 +37,7 @@ def create_app(config_object):
     db.init_app(app)
     ma.init_app(app)
     rd.init_app(app)
+    get_jaeger(app)
 
     oauth.init_app(app)
 
@@ -60,6 +62,12 @@ def register_blueprints(app):
 
 app = create_app(Config)
 register_blueprints(app)
+
+
+@app.before_request
+def before_request():
+    if not request.headers.get('X-Request-Id'):
+        raise RuntimeError('Missing X-Request-Id')
 
 
 if __name__ == '__main__':
