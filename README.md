@@ -30,14 +30,13 @@ docker exec -it auth flask db upgrade
 docker exec -it auth flask user --admin admin@example.com
 ```
 
+
 ## Трассировка
 Так же после запуска доступен Jaeger: http://localhost:16686
 
+
 ## Документация
-[Общая схема сервиса](https://github.com/georotor/Auth_sprint_1/blob/main/docs/Auth%20API.pdf).
-
 Подробная документация доступна после запуска по адресу http://localhost/api/v1/
-
 
 
 ## Тестирование
