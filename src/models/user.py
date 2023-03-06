@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import DDL, ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -36,6 +36,16 @@ class User(db.Model):
         return f'<User {self.email}>'
 
 
+def userhistory_partitions(ddl, target, connection, **kwargs):
+    for i in range(0, 5):
+        year = utc().year + i
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS "user_history_{}" 
+                PARTITION OF "user_history" 
+                FOR VALUES FROM ('{}-01-01') TO ('{}-01-01');""".format(year, year, year + 1)
+        )
+
+
 class UserHistory(db.Model):
     """При использовании Flask-Migrate не срабатывают тригеры event.listen:
     https://github.com/miguelgrinberg/Flask-Migrate/issues/344
@@ -46,16 +56,7 @@ class UserHistory(db.Model):
         UniqueConstraint("id", "created"),
         {
             "postgresql_partition_by": "RANGE (created)",
-            "listeners": [
-                (
-                    "after_create",
-                    DDL("""CREATE TABLE IF NOT EXISTS "user_history_{}" 
-                    PARTITION OF "user_history" 
-                    FOR VALUES FROM ('{}-01-01') TO ('{}-01-01');""".format(
-                        utc().year, utc().year, utc().year + 1
-                    ))
-                )
-            ],
+            "listeners": [("after_create", userhistory_partitions)],
         },
     )
 

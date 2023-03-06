@@ -62,15 +62,17 @@ def upgrade():
     sa.UniqueConstraint('id', 'created'),
     postgresql_partition_by='RANGE (created)'
     )
-    # Добавил создание секции (partition)
+    # Добавил создание секций (partition)
     # ----------------------------------------------
-    op.execute(
-        """CREATE TABLE IF NOT EXISTS "user_history_{}" 
-        PARTITION OF "user_history" FOR VALUES 
-        FROM ('{}-01-01') TO ('{}-01-01');""".format(
-            utc().year, utc().year, utc().year + 1
+    for i in range(0, 5):
+        year = utc().year + i
+        op.execute(
+            """CREATE TABLE IF NOT EXISTS "user_history_{}" 
+            PARTITION OF "user_history" FOR VALUES 
+            FROM ('{}-01-01') TO ('{}-01-01');""".format(
+                year, year, year + 1
+            )
         )
-    )
     # ----------------------------------------------
     op.create_table('users_roles',
     sa.Column('user_id', sa.UUID(), nullable=False),
