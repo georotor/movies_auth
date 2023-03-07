@@ -4,7 +4,7 @@ from flask import Flask, request
 from flask_injector import FlaskInjector
 from flask_migrate import Migrate
 
-from config import Config
+from config import config
 from db import db, ma, rd
 from exts.jaeger import get_jaeger
 from exts.jwt import jwt
@@ -16,7 +16,7 @@ from services.user import UserService, get_user_service
 from services.oauth import OAuthService, get_oauth_service
 from services.token import TokenService, get_token_service
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=Config.LOGGING_LEVEL)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=config.LOGGING_LEVEL)
 logger = logging.getLogger(__name__)
 
 migrate = Migrate()
@@ -62,15 +62,14 @@ def register_blueprints(app):
     FlaskInjector(app=app, modules=[configure])
 
 
-app = create_app(Config)
+app = create_app(config)
 register_blueprints(app)
 
 
 @app.before_request
 def before_request():
-    if not app.debug:
-        if not request.headers.get('X-Request-Id'):
-            raise RuntimeError('Missing X-Request-Id')
+    if config.JAEGER_ENABLE and not request.headers.get('X-Request-Id'):
+        raise RuntimeError('Missing X-Request-Id')
 
 
 if __name__ == '__main__':
