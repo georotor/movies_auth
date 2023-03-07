@@ -44,15 +44,39 @@ class Config(BaseSettings):
 
     YANDEX_CLIENT_ID: str | None
     YANDEX_CLIENT_SECRET: str | None
+    YANDEX_USERINFO_ENDPOINT = 'https://login.yandex.ru/info'
+    YANDEX_ACCESS_TOKEN_URL = 'https://oauth.yandex.ru/token'
+    YANDEX_AUTHORIZE_URL = 'https://oauth.yandex.ru/authorize'
 
     VK_CLIENT_ID: str | None
     VK_CLIENT_SECRET: str | None
+    VK_ACCESS_TOKEN_URL = 'https://oauth.vk.com/access_token'
+    VK_AUTHORIZE_URL = 'https://oauth.vk.com/authorize'
+    VK_USERINFO_ENDPOINT = 'https://api.vk.com/method/users.get?fields=sex,bdate,screen_name&v=5.131'
+    VK_CLIENT_KWARGS = {
+        'token_placement': 'uri',
+        'token_endpoint_auth_method': 'client_secret_post',
+        'scope': 'email'
+    }
 
     MAIL_CLIENT_ID: str | None
     MAIL_CLIENT_SECRET: str | None
+    MAIL_AUTHORIZE_URL = 'https://oauth.mail.ru/login'
+    MAIL_ACCESS_TOKEN_URL = 'https://oauth.mail.ru/token'
+    MAIL_USERINFO_ENDPOINT = 'https://oauth.mail.ru/userinfo'
+    MAIL_CLIENT_KWARGS = {
+        'scope': 'userinfo',
+        'token_placement': 'uri',
+    }
 
     GOOGLE_CLIENT_ID: str | None
     GOOGLE_CLIENT_SECRET: str | None
+    GOOGLE_ACCESS_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+    GOOGLE_AUTHORIZE_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
+    GOOGLE_SERVER_METADATA_URL = 'https://accounts.google.com/.well-known/openid-configuration'
+    GOOGLE_CLIENT_KWARGS = {
+        'scope': 'openid email profile'
+    }
 
 
 config = Config()
