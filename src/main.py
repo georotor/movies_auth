@@ -37,7 +37,9 @@ def create_app(config_object):
     db.init_app(app)
     ma.init_app(app)
     rd.init_app(app)
-    get_jaeger(app)
+
+    if config_object.JAEGER_ENABLE:
+        get_jaeger(app)
 
     oauth.init_app(app)
 

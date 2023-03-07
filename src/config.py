@@ -34,6 +34,7 @@ class Config:
 
     JAEGER_AGENT_PORT = int(environ.get('JAEGER_AGENT_PORT', 6831))
     JAEGER_HOST = environ.get('JAEGER_HOST', 'localhost')
+    JAEGER_ENABLE = environ.get('JAEGER_ENABLE', 'True').lower() in ('true', '1')
 
     LOGGING_LEVEL = int(environ.get('LOGGING_LEVEL', logging.DEBUG))
 
