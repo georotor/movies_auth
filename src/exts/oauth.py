@@ -1,52 +1,41 @@
 from authlib.integrations.flask_client import OAuth
 
-oauth = OAuth()
+from config import config
 
+
+oauth = OAuth()
+"""
+Вынес все параметры с URL и scope в конфиг, чтобы их можно было "перегрузить" через переменные окружения.
+Но не считаю это верным решением, т.к. вероятность того что сервис изменит какой-нибудь URL ничуть не больше 
+того что он изменит названием или местонахождение требуемого нам параметра, конечно и это можно решить
+путем внедрения каких-нибудь шаблонов, но это кажется слишком избыточным :)
+Возможно есть еще какие то аргументы, т.к. авторы authlib пишут в своей документации:
+We suggest that you keep ONLY {name}_CLIENT_ID and {name}_CLIENT_SECRET in your Flask application configuration.
+"""
 providers = {
     'yandex': {
-        'userinfo_endpoint': 'https://login.yandex.ru/info',
-        'access_token_url': 'https://oauth.yandex.ru/token',
-        'authorize_url': 'https://oauth.yandex.ru/authorize',
         'get_email': (lambda x: x['userinfo'].get('default_email')),
         'get_social_id': (lambda x: x['userinfo'].get('id'))
     },
     'vk': {
-        'api_base_url': 'https://api.vk.com/method/',
-        'access_token_url': 'https://oauth.vk.com/access_token',
-        'authorize_url': 'https://oauth.vk.com/authorize',
-        'userinfo_endpoint': 'users.get?fields=sex,bdate,screen_name&v=5.131',
-        'client_kwargs': {
-            'token_placement': 'uri',
-            'token_endpoint_auth_method': 'client_secret_post',
-            'scope': 'email'
-        },
         'get_email': (lambda x: x['token'].get('email')),
         'get_social_id': (lambda x: x['token'].get('user_id'))
     },
     'mail': {
-        'authorize_url': 'https://oauth.mail.ru/login',
-        'access_token_url': 'https://oauth.mail.ru/token',
-        'userinfo_endpoint': 'https://oauth.mail.ru/userinfo',
-        'client_kwargs': {
-            'scope': 'userinfo',
-            'token_placement': 'uri',
-        },
         'get_email': (lambda x: x['userinfo'].get('email')),
         'get_social_id': (lambda x: x['userinfo'].get('id'))
     },
     'google': {
-        'access_token_url': 'https://oauth2.googleapis.com/token',
-        'authorize_url': 'https://accounts.google.com/o/oauth2/v2/auth',
-        'server_metadata_url': 'https://accounts.google.com/.well-known/openid-configuration',
-        'client_kwargs': {
-            'scope': 'openid email profile'
-        },
         'get_email': (lambda x: x['userinfo'].get('email')),
         'get_social_id': (lambda x: x['userinfo'].get('sub'))
     }
 }
 
 for provider, settings in providers.items():
+    for key in filter(lambda n: n.startswith(f'{provider.upper()}_'),  config.__fields__):
+        name = key[len(provider)+1:].lower()
+        settings[name] = getattr(config, key)
+
     oauth.register(
         name=provider,
         **settings
