@@ -2,7 +2,11 @@
 
 [![CI](https://github.com/georotor/movies_auth/actions/workflows/tests.yml/badge.svg)](https://github.com/georotor/movies_auth/actions/workflows/tests.yml)
 
-## Компоненты сервиса
+## Архитектура
+
+![Архитектура](https://github.com/georotor/movies_auth/blob/main/docs/schema.png?raw=true)
+
+## Компоненты
 - [Flask - реализация API](https://github.com/georotor/movies_auth/tree/main/src)
 - Postgres - хранилище
 - Redis - хранилище для кэша
