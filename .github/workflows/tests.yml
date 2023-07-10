@@ -13,4 +13,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Test
-        run: cp src/tests/functional/.env.tests.example src/tests/functional/.env.tests && docker-compose -f src/tests/functional/docker-compose.yml up --build tests
+        run: cp src/tests/functional/.env.tests.example src/tests/functional/.env.tests && docker-compose -f src/tests/functional/docker-compose.tests.yml up --build
