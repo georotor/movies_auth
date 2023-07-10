@@ -1,9 +1,18 @@
-# Проектная работа 6 и 7 спринта
+# Movies: Auth сервис для кинотеатра
 
-Репозитории:
-- Auth API: https://github.com/georotor/Auth_sprint_1
-- Async API: https://github.com/georotor/Async_API_sprint_1
+[![CI](https://github.com/georotor/movies_auth/actions/workflows/tests.yml/badge.svg)](https://github.com/georotor/movies_auth/actions/workflows/tests.yml)
 
+## Компоненты сервиса
+- [Flask - реализация API](https://github.com/georotor/movies_auth/tree/main/src)
+- Postgres - хранилище
+- Redis - хранилище для кэша
+- Jaeger - трассировка
+
+## Документация
+- [Общая схема API](https://github.com/georotor/movies_auth/blob/main/docs/Auth%20API.pdf)
+- Подробная документация доступна после запуска по адресу http://localhost/api/v1/
+
+## Запуск сервиса
 
 Для запуска потребуется файл `.env.db` с переменными окружения для Postgresql:
 ```commandline
@@ -30,14 +39,8 @@ docker exec -it auth flask db upgrade
 docker exec -it auth flask user --admin admin@example.com
 ```
 
-
 ## Трассировка
 Так же после запуска доступен Jaeger: http://localhost:16686
-
-
-## Документация
-Подробная документация доступна после запуска по адресу http://localhost/api/v1/
-
 
 ## Тестирование
 
